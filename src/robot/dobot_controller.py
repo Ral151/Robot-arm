@@ -25,8 +25,10 @@ class DobotController:
         self._home: Dict[str, float] = robot_cfg.get(
             "home_position", {"x": 200.0, "y": 0.0, "z": 50.0, "r": 0.0}
         )
-        self._suction_on_delay: float = robot_cfg.get("suction", {}).get("on_delay", 0.5)
-        self._suction_off_delay: float = robot_cfg.get("suction", {}).get("off_delay", 0.3)
+        self._gripper_close_delay: float = robot_cfg.get("gripper", {}).get("close_delay", 0.5)
+        self._gripper_open_delay: float = robot_cfg.get("gripper", {}).get("open_delay", 0.3)
+        self._gripper_close_value: int = robot_cfg.get("gripper", {}).get("close_value", 480)
+        self._gripper_open_value: int = robot_cfg.get("gripper", {}).get("open_value", 200)
         self._device = None
         self._connect()
 
@@ -53,35 +55,47 @@ class DobotController:
         if self._device is not None:
             self._device.move_to(x, y, z, r, wait=True)
 
-    def set_suction(self, enabled: bool) -> None:
-        """Enable or disable the suction cup."""
+    def set_gripper(self, close: bool) -> None:
+        """Open or close the gripper.
+        
+        Args:
+            close: True to close/grip, False to open/release
+        """
         if self._device is not None:
-            self._device.suck(enabled)
+            # Dobot gripper control: higher value = more closed
+            value = self._gripper_close_value if close else self._gripper_open_value
+            self._device.grip(value)
+            logger.debug(f"Gripper {'closed' if close else 'opened'} (value={value})")
 
     def pick(self, coords: Dict[str, float]) -> None:
-        """Lower to the target, activate suction, then lift."""
+        """Lower to the target, close gripper to grab, then lift."""
         import time
         x, y, z = coords["x"], coords["y"], coords["z"]
         r = coords.get("r", 0.0)
+        # Open gripper before approaching
+        self.set_gripper(False)
+        time.sleep(self._gripper_open_delay)
         # Move above target
         self.move_to(x, y, z + 30, r)
         # Lower to target
         self.move_to(x, y, z, r)
-        self.set_suction(True)
-        time.sleep(self._suction_on_delay)
+        # Close gripper to grab
+        self.set_gripper(True)
+        time.sleep(self._gripper_close_delay)
         # Lift
         self.move_to(x, y, z + 30, r)
         logger.info(f"Picked object at ({x:.1f}, {y:.1f}, {z:.1f})")
 
     def place(self, coords: Dict[str, float]) -> None:
-        """Move to the drop position and release suction."""
+        """Move to the drop position and open gripper to release."""
         import time
         x, y, z = coords["x"], coords["y"], coords["z"]
         r = coords.get("r", 0.0)
         self.move_to(x, y, z + 30, r)
         self.move_to(x, y, z, r)
-        self.set_suction(False)
-        time.sleep(self._suction_off_delay)
+        # Open gripper to release
+        self.set_gripper(False)
+        time.sleep(self._gripper_open_delay)
         self.move_to(x, y, z + 30, r)
         logger.info(f"Placed object at ({x:.1f}, {y:.1f}, {z:.1f})")
 
