@@ -7,13 +7,11 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 try:
-    from pydobot import Dobot  # type: ignore
+    from pydobotplus import Dobot  # type: ignore
     _DOBOT_AVAILABLE = True
 except ImportError:
     _DOBOT_AVAILABLE = False
-    logger.warning("pydobot not installed – running in simulation mode.")
-
-
+    logger.warning("pydobotplus not installed – running in simulation mode.")
 class DobotController:
     """High-level interface for the Dobot Magician robot arm."""
 

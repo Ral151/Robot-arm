@@ -78,7 +78,7 @@ You need to collect multiple robot poses where the AprilTag is visible:
 import cv2
 import numpy as np
 from pupil_apriltags import Detector
-from pydobot import Dobot
+from pydobotplus import Dobot
 
 # Initialize
 camera = cv2.VideoCapture(0)

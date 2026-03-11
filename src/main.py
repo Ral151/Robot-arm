@@ -30,7 +30,7 @@ _running = True
 
 
 def signal_handler(sig, frame):
-    \"\"\"Handle Ctrl+C for graceful shutdown.\"\"\"
+    # Handle Ctrl+C for graceful shutdown
     global _running
     logger.info("Shutdown signal received. Finishing current operation...")
     _running = False
@@ -70,11 +70,11 @@ def main(args: argparse.Namespace) -> None:
     selector = TargetSelector(classes_cfg)
     
     # Get sorting bin locations
-    sorting_bins = robot_cfg[\"robot\"][\"sorting_bins\"]
+    sorting_bins = robot_cfg["robot"]["sorting_bins"]
     logger.info(f"Sorting bins configured: {list(sorting_bins.keys())}")
     
     # Statistics tracking
-    stats: Dict[str, int] = {\"nut\": 0, \"bolt\": 0, \"screw\": 0, \"total\": 0, \"failed\": 0}
+    stats: Dict[str, int] = {"nut": 0, "bolt": 0, "screw": 0, "total": 0, "failed": 0}
 
     logger.info("="*50)
     logger.info("Starting continuous sorting loop.")
@@ -115,17 +115,17 @@ def main(args: argparse.Namespace) -> None:
                     
                     # Update statistics
                     stats[target_label] += 1
-                    stats[\"total\"] += 1
+                    stats["total"] += 1
                     logger.info(f"  ✓ Sorted {target_label} to bin #{stats[target_label]}")
                     logger.info(f"  Total sorted: {stats['total']} (nuts={stats['nut']}, bolts={stats['bolt']}, screws={stats['screw']})")
                     
                 except Exception as e:
                     logger.error(f"  ✗ Failed to sort {target_label}: {e}")
-                    stats[\"failed\"] += 1
+                    stats["failed"] += 1
                     robot.home()  # Return to safe position
             else:
                 logger.warning(f"  Unknown object class '{target_label}' - skipping")
-                stats[\"failed\"] += 1
+                stats["failed"] += 1
 
     except KeyboardInterrupt:
         logger.info("Interrupted by user.")
@@ -149,11 +149,11 @@ def main(args: argparse.Namespace) -> None:
         logger.info("Shutdown complete.")
 
 
-if __name__ == \"__main__\":
-    parser = argparse.ArgumentParser(description=\"Robot Arm Sorting Challenge\")
-    parser.add_argument(\"--robot-config\", default=\"configs/robot.yaml\")
-    parser.add_argument(\"--camera-config\", default=\"configs/camera.yaml\")
-    parser.add_argument(\"--calibration-config\", default=\"configs/calibration.yaml\")
-    parser.add_argument(\"--classes-config\", default=\"configs/classes.yaml\")
-    parser.add_argument(\"--model\", default=\"models/yolo/best.pt\")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Robot Arm Sorting Challenge")
+    parser.add_argument("--robot-config", default="configs/robot.yaml")
+    parser.add_argument("--camera-config", default="configs/camera.yaml")
+    parser.add_argument("--calibration-config", default="configs/calibration.yaml")
+    parser.add_argument("--classes-config", default="configs/classes.yaml")
+    parser.add_argument("--model", default="models/yolo/best.pt")
     main(parser.parse_args())

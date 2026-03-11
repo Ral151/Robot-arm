@@ -1,38 +1,32 @@
-# Robot arm hardware configuration
 robot:
-  port: /dev/ttyUSB0 # Serial port for Dobot connection
+  port: COM6
   baudrate: 115200
   home_position:
-    x: 200.0 # mm
+    x: 200.0
     y: 0.0
     z: 50.0
-    r: 0.0 # rotation (degrees)
-
-  # Sorting bin locations for Robot Arm Challenge
+    r: 0.0
   sorting_bins:
-    nut: # Bin for nuts
+    nut:
       x: 250.0
       y: -100.0
       z: 10.0
       r: 0.0
-    bolt: # Bin for bolts
+    bolt:
       x: 250.0
       y: 0.0
       z: 10.0
       r: 0.0
-    screw: # Bin for screws
+    screw:
       x: 250.0
       y: 100.0
       z: 10.0
       r: 0.0
-
-  # Pickup zone (above the source bin/container)
   pickup_zone:
     x: 150.0
     y: 0.0
-    z_safe: 80.0 # Safe height above bin
-    z_bin: 10.0 # Fixed depth of the container plate
-
+    z_safe: 80.0
+    z_bin: 10.0
   workspace:
     x_min: 100.0
     x_max: 320.0
@@ -40,12 +34,10 @@ robot:
     y_max: 150.0
     z_min: 0.0
     z_max: 100.0
-  speed: 80 # mm/s (increased for competition speed)
-  acceleration: 80 # mm/s^2
-
-  # Gripper configuration (replaces suction)
+  speed: 80
+  acceleration: 80
   gripper:
-    close_value: 480 # PWM value for closed gripper (gripping)
-    open_value: 200 # PWM value for open gripper (releasing)
-    close_delay: 0.5 # seconds to wait after closing
-    open_delay: 0.3 # seconds to wait after opening
+    close_value: 480
+    open_value: 200
+    close_delay: 0.5
+    open_delay: 0.3
