@@ -1,0 +1,17 @@
+# Camera configuration
+camera:
+  device_id: 0             # Camera index (0 = default webcam)
+  width: 1280
+  height: 720
+  fps: 30
+  exposure: -1             # -1 for auto
+  focus: -1                # -1 for auto
+  flip: false              # Flip image horizontally
+
+# Intrinsic parameters (update after calibration)
+intrinsics:
+  fx: 800.0
+  fy: 800.0
+  cx: 640.0
+  cy: 360.0
+  distortion_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]

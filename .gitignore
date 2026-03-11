@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.env
+.venv
+env/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Data and model weights (large files)
+data/raw_images/*
+data/labeled_images/*
+data/test_images/*
+data/calibration_images/*
+models/yolo/*.pt
+models/yolo/*.onnx
+!data/**/.gitkeep
+!models/**/.gitkeep
+
+# Outputs
+outputs/logs/*
+outputs/debug_frames/*
+outputs/recordings/*
+!outputs/**/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

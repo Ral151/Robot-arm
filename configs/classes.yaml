@@ -1,0 +1,17 @@
+# Object classes for YOLO detection
+# Format: id: name
+classes:
+  0: cube
+  1: sphere
+  2: cylinder
+  3: bottle
+  4: cup
+
+# Detection thresholds per class (optional overrides)
+thresholds:
+  default: 0.5
+  cube: 0.55
+  sphere: 0.50
+  cylinder: 0.50
+  bottle: 0.45
+  cup: 0.45
