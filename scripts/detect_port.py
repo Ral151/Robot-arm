@@ -27,7 +27,7 @@ def get_ports():
 def detect_dobot_port():
     config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
     os.makedirs(config_dir, exist_ok=True)
-    config_file = os.path.join(config_dir, 'device_port.yaml')
+    config_file = os.path.join(config_dir, 'robot.yaml')
 
     input("Please ensure the USB device is connected and press Enter...")
     ports_before = get_ports()
