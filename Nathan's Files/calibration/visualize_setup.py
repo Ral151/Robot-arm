@@ -83,6 +83,9 @@ def get_tag_to_camera_matrix(tag):
     cam_T_tag = np.eye(4)
     cam_T_tag[:3,:3] = tag.pose_R
     cam_T_tag[:3,3] = tag.pose_t.flatten() * 1000
+    cam_T_tag[3][0] = -cam_T_tag[3][0]
+    cam_T_tag[3][1] = -cam_T_tag[3][1]
+    cam_T_tag[3][2] = -cam_T_tag[3][2]
     
     return cam_T_tag
     
