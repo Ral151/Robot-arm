@@ -69,8 +69,8 @@ def get_robot_arm_matrix(pose):
     y = pose.position.y
     z = pose.position.z
     theta = np.arctan2(y,x)
-    base_T_gripper = np.array([[np.cos(theta),np.sin(theta),0,x],
-                               [np.sin(-theta),np.cos(theta),0,y],
+    base_T_gripper = np.array([[np.cos(theta),np.sin(-theta),0,x],
+                               [np.sin(theta),np.cos(theta),0,y],
                                [0,0,1,z],
                                [0,0,0,1]
                                ], dtype=np.float32)
