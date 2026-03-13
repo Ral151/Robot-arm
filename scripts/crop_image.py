@@ -31,7 +31,7 @@ def crop_every_image(img_path: str):
     return 
 
 def main():
-    raw_img_path = Path("data/test_images")
+    raw_img_path = Path("data/raw_images")
     img_files = list(raw_img_path.glob("*.jpg"))
     crop_every_image(img_files)
 

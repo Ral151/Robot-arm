@@ -21,14 +21,19 @@ venv/
 
 # Data and model weights (large files)
 data/raw_images/*
+data/crop_images2/*
 data/labeled_images/*
 data/test_images/*
 data/crop_images/*
 data/calibration_images/*
 models/yolo/*.pt
+model_datasets/*
+model_datasets2/*
 models/yolo/*.onnx
 !data/**/.gitkeep
 !models/**/.gitkeep
+runs/*
+models/*
 
 # Outputs
 outputs/logs/*
