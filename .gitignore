@@ -44,3 +44,10 @@ outputs/recordings/*
 # OS
 .DS_Store
 Thumbs.db
+
+# Markdown
+CALIBRATION.md
+CHANGES_SUMMARY.md
+
+# SRC
+src/camera/camera_stream.py
