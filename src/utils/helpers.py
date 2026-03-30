@@ -1,12 +1,9 @@
 """General-purpose helper utilities."""
-
 from pathlib import Path
 from typing import Any, Dict
-
 import cv2
 import numpy as np
 import yaml
-
 
 def load_yaml(path: str) -> Dict[str, Any]:
     """Load a YAML file and return its contents as a dict.
@@ -26,7 +23,6 @@ def load_yaml(path: str) -> Dict[str, Any]:
     with p.open("r") as f:
         return yaml.safe_load(f) or {}
 
-
 def save_yaml(data: Dict[str, Any], path: str) -> None:
     """Serialise a dictionary to a YAML file.
 
@@ -37,7 +33,6 @@ def save_yaml(data: Dict[str, Any], path: str) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
         yaml.dump(data, f, default_flow_style=False)
-
 
 def draw_detections(frame: np.ndarray, detections: list) -> np.ndarray:
     """Draw bounding boxes and labels onto a copy of *frame*.
@@ -56,7 +51,6 @@ def draw_detections(frame: np.ndarray, detections: list) -> np.ndarray:
         cv2.rectangle(out, (x1, y1), (x2, y2), (0, 255, 0), 2)
         cv2.putText(out, label, (x1, max(y1 - 8, 0)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
     return out
-
 
 def save_frame(frame: np.ndarray, output_dir: str, filename: str) -> Path:
     """Save a frame to disk.

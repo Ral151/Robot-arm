@@ -16,7 +16,9 @@ from typing import Dict
 
 import yaml
 
+
 from camera.camera_stream import CameraStream
+import calibration.calibration_matrices
 from calibration.transforms import load_calibration
 from robot.dobot_controller import DobotController
 from vision.detector import Detector
@@ -49,22 +51,26 @@ def main(args: argparse.Namespace) -> None:
     
     logger.info("=== Robot Arm Sorting Challenge ===")
     logger.info("Loading configurations …")
-    robot_cfg = load_config(args.robot_config)
-    camera_cfg = load_config(args.camera_config)
-    calib_cfg = load_config(args.calibration_config)
-    classes_cfg = load_config(args.classes_config)
+    robot_cfg = load_config(args.robot_config) #Robot settings
+    camera_cfg = load_config(args.camera_config) #Camera Settings
+    calib_cfg = load_config(args.calibration_config) # Calibration Data
+    classes_cfg = load_config(args.classes_config) 
 
+    #Start Camera
     logger.info("Initialising camera …")
     camera = CameraStream(camera_cfg)
     camera.start()
 
+    #Start Robot
     logger.info("Initialising robot …")
     robot = DobotController(robot_cfg)
     robot.home()
 
+    #Preparing Calibration Data
     logger.info("Loading calibration …")
     transform = load_calibration(calib_cfg)
 
+    #Preparing YOLO AI Model
     logger.info("Loading YOLO detector …")
     detector = Detector(args.model, classes_cfg)
     selector = TargetSelector(classes_cfg)

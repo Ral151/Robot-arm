@@ -1,70 +1,28 @@
-"""Coordinate-frame transforms between camera space and robot space."""
+
+"""
+Real-time 3D visualization combining robot arm, AprilTag, and camera frames.
+All coordinate frames are expressed relative to the robot base frame.
+"""
+
 import os
 import yaml
 import numpy as np
-import yaml,sys
 import matplotlib.pyplot as plt
-import cv2
-import pyrealsense2 as rs
-
-from utils.logger import get_logger
-from utils.get_port import get_dobot_port
-from utils.camera_functions import initialize_pipeline
-from utils.camera_functions import get_camera_intrinsics
-
-from typing import Dict, Tuple
-from pydobotplus import Dobot
-from pupil_apriltags import Detector
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
+import cv2
+import pyrealsense2 as rs
+from pupil_apriltags import Detector
 from scipy.spatial.transform import Rotation as R
+from pydobotplus import Dobot
+import sys
 
-logger = get_logger(__name__)
-
-class CameraToRobotTransform:
-    """Applies a rigid-body transform from camera frame to robot base frame."""
-
-    def __init__(self, rotation_matrix: np.ndarray, translation: np.ndarray) -> None:
-        self._R = rotation_matrix          # 3×3
-        self._t = translation.reshape(3)   # 3-vector (metres → converted to mm)
-
-    def camera_to_robot(self, point_camera: np.ndarray) -> np.ndarray:
-        """Transform a 3-D point from camera frame to robot base frame (mm).
-
-        Args:
-            point_camera: 3-D point in camera frame (metres).
-
-        Returns:
-            3-D point in robot base frame (mm).
-        """
-        point_m = self._R @ point_camera.reshape(3) + self._t
-        return point_m * 1000.0  # convert metres → mm
-
-    def image_to_robot(self, centroid: Tuple[float, float], z_camera: float = 0.5) -> Dict[str, float]:
-        """Project a 2-D image centroid to a robot-frame pick coordinate.
-
-        This method uses the stored rotation and translation to transform a
-        camera-frame 3-D point to robot-base-frame coordinates.  The 3-D
-        camera-frame point is obtained by back-projecting the pixel coordinate
-        through the assumed depth ``z_camera`` using a simplified normalised
-        approach.  For accurate results, replace this with a proper
-        back-projection using the camera intrinsics
-        (``point_cam = K_inv @ [u, v, 1] * depth``).
-
-        Args:
-            centroid: (u, v) pixel coordinates.
-            z_camera: Assumed depth in the camera frame (metres).
-
-        Returns:
-            Dict with keys ``x``, ``y``, ``z`` in robot frame (mm).
-        """
-        # NOTE: Replace with proper intrinsic back-projection when camera
-        # calibration parameters are available.  The normalised-coordinate
-        # representation below is intentionally simple and should be updated.
-        u, v = centroid
-        point_cam = np.array([u / 1000.0, v / 1000.0, z_camera])
-        robot_xyz = self.camera_to_robot(point_cam)
-        return {"x": float(robot_xyz[0]), "y": float(robot_xyz[1]), "z": float(robot_xyz[2])}
+def get_dobot_port():
+    """Load Dobot port from config file"""
+    config_file = os.path.join(os.path.dirname(__file__), "..", "config", "device_port.yaml")
+    with open(config_file, "r") as file:
+        config = yaml.safe_load(file)
+    return config["device_port"]
 
 def initialize_pipeline(serial=None):
     """Initialize RealSense pipeline"""
@@ -84,10 +42,12 @@ def initialize_pipeline(serial=None):
     profile = pipeline.start(rs_config)
     align = rs.align(rs.stream.color)
     return pipeline, profile, align
+
 def get_camera_intrinsics(profile):
     """Get camera intrinsic parameters"""
     intr = profile.get_stream(rs.stream.color).as_video_stream_profile().get_intrinsics()
     return intr.fx, intr.fy, intr.ppx, intr.ppy, intr.coeffs
+
 def process_frames(pipeline, align):
     """Process camera frames"""
     frames = pipeline.wait_for_frames()
@@ -99,6 +59,47 @@ def process_frames(pipeline, align):
     color_image = np.asanyarray(color_frame.get_data())
     depth_image = np.asanyarray(depth_frame.get_data())
     return color_image, depth_image
+
+def get_robot_arm_matrix(pose):
+    """
+    Build a 4x4 transformation matrix (will transform point under gripper frame to base frame) in mm from a robot pose object.
+    Assumes planar robot (rotation about Z only).
+    """
+    x = pose.position.x
+    y = pose.position.y
+    z = pose.position.z
+    theta = np.arctan2(y,x)
+    base_T_gripper = np.array([[np.cos(theta),np.sin(-theta),0,x],
+                               [np.sin(theta),np.cos(theta),0,y],
+                               [0,0,1,z],
+                               [0,0,0,1]
+                               ], dtype=np.float32)
+    return base_T_gripper
+def get_tag_to_gripper_matrix():
+    """
+    Build a 4x4 transformation matrix (will transform points under tag frame to gripper frame) in mm.
+    Tag is 153mm below gripper, 30mm forward along gripper X.
+    X-axes aligned, but Z-axis flipped.
+    """
+    gripper_T_tag = np.array([
+            [-1,0, 0,  30],
+            [ 0,1, 0,   0],
+            [ 0,0,-1, 153],
+            [ 0,0, 0,   1]
+        ], dtype=np.float32)
+    return gripper_T_tag
+
+def get_tag_to_camera_matrix(tag):
+    """
+    Build a 4x4 transformation matrix (will transform points under tag frame to camera frame) in mm from a detected tag object.
+    """
+    cam_T_tag = np.eye(4)
+    cam_T_tag[:3,:3] = tag.pose_R
+    cam_T_tag[:3,3] = tag.pose_t.flatten() * 1000
+    
+    return cam_T_tag
+    
+
 def draw_coordinate_frame(ax, T, scale=50.0, label="", colors=None):
     """
     Draw a coordinate frame at the position/orientation defined by transformation matrix T.
@@ -141,46 +142,7 @@ def draw_coordinate_frame(ax, T, scale=50.0, label="", colors=None):
         text_pos = axes_world[i, :3]
         ax.text(text_pos[0], text_pos[1], text_pos[2], 
                f"{label}_{name}", fontsize=9, color=color, fontweight='bold')
-
-
-def get_robot_arm_matrix(pose):
-    """
-    Build a 4x4 transformation matrix (will transform point under gripper frame to base frame) in mm from a robot pose object.
-    Assumes planar robot (rotation about Z only).
-    """
-    x = pose.position.x
-    y = pose.position.y
-    z = pose.position.z
-    theta = np.arctan2(y,x)
-    base_T_gripper = np.array([[np.cos(theta),np.sin(-theta),0,x],
-                               [np.sin(theta),np.cos(theta),0,y],
-                               [0,0,1,z],
-                               [0,0,0,1]
-                               ], dtype=np.float32)
-    return base_T_gripper
-def get_tag_to_gripper_matrix():
-    """
-    Build a 4x4 transformation matrix (will transform points under tag frame to gripper frame) in mm.
-    Tag is 153mm below gripper, 30mm forward along gripper X.
-    X-axes aligned, but Z-axis flipped.
-    """
-    gripper_T_tag = np.array([
-            [-1,0, 0,  30],
-            [ 0,1, 0,   0],
-            [ 0,0,-1, 153],
-            [ 0,0, 0,   1]
-        ], dtype=np.float32)
-    return gripper_T_tag
-def get_tag_to_camera_matrix(tag):
-    """
-    Build a 4x4 transformation matrix (will transform points under tag frame to camera frame) in mm from a detected tag object.
-    """
-    cam_T_tag = np.eye(4)
-    cam_T_tag[:3,:3] = tag.pose_R
-    cam_T_tag[:3,3] = tag.pose_t.flatten() * 1000
-    
-    return cam_T_tag
-
+        
 class SetupVisualizer:
     """Real-time 3D visualization of complete setup: robot, camera, and AprilTag"""
     
@@ -213,65 +175,7 @@ class SetupVisualizer:
         
         # Store latest tag detection
         self.latest_tag = None
-    def get_camera_T_tag(self):
-        try:
-            # ========================================
-            # 1. Get camera frames and detect AprilTags
-            # ========================================
-            color_image, depth_image = process_frames(self.pipeline, self.align)
-            if color_image is None or depth_image is None:
-                return self.ax_3d, self.ax_camera
-            
-            gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-            tags = self.detector.detect(gray_image, estimate_tag_pose=True, 
-                                       camera_params=[self.fx, self.fy, self.cx, self.cy], 
-                                       tag_size=self.tag_size)
-            # Draw detection on camera image
-            display_image = color_image.copy()
-            if tags:
-                self.latest_tag = tags[0]  # Use first detected tag
-                tag = self.latest_tag
-                
-                # Draw green box around tag
-                for idx in range(len(tag.corners)):
-                    cv2.line(display_image, 
-                            tuple(tag.corners[idx - 1, :].astype(int)), 
-                            tuple(tag.corners[idx, :].astype(int)), 
-                            (0, 255, 0), 2)
-                cv2.circle(display_image, tuple(tag.center.astype(int)), 5, (0, 0, 255), -1)
-                cv2.putText(display_image, f"ID: {tag.tag_id}", 
-                           (int(tag.center[0]), int(tag.center[1]) - 10),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-            
-            # ========================================
-            # 2. Update camera view
-            # ========================================
-            self.ax_camera.clear()
-            self.ax_camera.imshow(cv2.cvtColor(display_image, cv2.COLOR_BGR2RGB))
-            self.ax_camera.set_title('Camera View with AprilTag Detection', fontsize=12, fontweight='bold')
-            self.ax_camera.axis('off')
-            
-            # ========================================
-            # 3. Get robot pose
-            # ========================================
-            pose = self.device.get_pose()
-            base_T_gripper = get_robot_arm_matrix(pose)
-            
-            # ========================================
-            # 4. Update 3D visualization
-            # ========================================
-            # Save current view angle before clearing
-            elev = self.ax_3d.elev
-            azim = self.ax_3d.azim
-            
-            self.ax_3d.clear()
-            
-        except Exception as e:
-            print("oh no, error")
         
-        return 
-            
-    
     def update(self, frame):
         """Update function called by animation"""
         try:
@@ -318,15 +222,6 @@ class SetupVisualizer:
             pose = self.device.get_pose()
             base_T_gripper = get_robot_arm_matrix(pose)
             
-            # ========================================
-            # 4. Get Cam_T_tag Matrix
-            # ========================================
-            cam_T_tag = get_tag_to_camera_matrix(self.latest_tag)
-            tag_T_camera = np.linalg.inv(cam_T_tag)
-            base_T_tag = base_T_gripper @ self.gripper_T_tag
-            base_T_camera = base_T_tag @ tag_T_camera
-            
-            '''Excluded Code'''
             # ========================================
             # 4. Update 3D visualization
             # ========================================
@@ -384,12 +279,10 @@ class SetupVisualizer:
                         [gripper_pos[2], tag_pos[2]], 
                         'purple', linestyle=':', linewidth=1.5, alpha=0.6)
             
-            #========================================
+            # ========================================
             # Draw CAMERA FRAME (if tag detected)
             # Compute camera position from: base_T_camera = base_T_tag @ inv(cam_T_tag)
-            #========================================
-            '''Excluded Code'''
-            
+            # ========================================
             if self.latest_tag is not None:
                 cam_T_tag = get_tag_to_camera_matrix(self.latest_tag)
                 tag_T_camera = np.linalg.inv(cam_T_tag)
@@ -501,8 +394,7 @@ class SetupVisualizer:
         ani = FuncAnimation(self.fig, self.update, interval=100, blit=False, cache_frame_data=False)
         plt.show()
 
-def calc_calibration():
-    #Setup Dobot
+def main():
     """Main entry point"""
     try:
         # Connect to robot
@@ -512,11 +404,37 @@ def calc_calibration():
         print("Connected successfully!")
         device.home()
         
-        pose = device.get_pose()
-        robot_T_gripper = get_robot_arm_matrix(pose)
-        gripper_T_tag = get_tag_to_gripper_matrix()
-        tag_T_camera = get_tag_to_camera_matrix()
+        # Initialize camera
+        print("Initializing RealSense camera...")
+        pipeline, profile, align = initialize_pipeline()
+        fx, fy, cx, cy, _ = get_camera_intrinsics(profile)
+        print(f"Camera intrinsics: fx={fx:.2f}, fy={fy:.2f}, cx={cx:.2f}, cy={cy:.2f}")
         
+        # Initialize AprilTag detector
+        print("Initializing AprilTag detector...")
+        detector = Detector(families="tag36h11", nthreads=1, quad_decimate=1.0, 
+                           quad_sigma=0.0, refine_edges=1, decode_sharpening=0.25, debug=0)
+        tag_size = 0.0792  # Set the tag size in meters
+        print(f"Tag size: {tag_size} m = {tag_size * 1000} mm")
+        
+        print("\nStarting visualization...")
+        print("="*70)
+        print("Visualizing robot setup with coordinate frames:")
+        print("  - Base frame (robot base) at origin")
+        print("  - Gripper/end-effector frame")
+        print("  - AprilTag frame (fixed 153mm below gripper)")
+        print("  - Camera frame (computed from AprilTag detection)")
+        print("Close the window to exit.")
+        print("="*70)
+        
+        # Start visualization
+        visualizer = SetupVisualizer(device, pipeline, align, detector, fx, fy, cx, cy, tag_size)
+        visualizer.run()
+        
+        # Cleanup
+        pipeline.stop()
+        device.close()
+        print("\nCamera stopped. Devices closed. Visualization closed.")
         
     except KeyboardInterrupt:
         print("\nInterrupted by user")
@@ -526,27 +444,6 @@ def calc_calibration():
         import traceback
         traceback.print_exc()
         sys.exit(1)
-    
-    #Get Dobot Pose
-    
-    #Get Robot_T_Gripper
-    
-    #Get Gripper_T_Tag
-    
-    #Get Tag_T_Camera
-        
-def load_calibration(config: dict) -> CameraToRobotTransform:
-    """Create a :class:`CameraToRobotTransform` from a calibration config dict.
 
-    Args:
-        config: Parsed contents of ``calibration.yaml``.
-
-    Returns:
-        A ready-to-use :class:`CameraToRobotTransform`.
-    """
-    calib = config.get("calibration", {})
-    cam_to_robot = calib.get("camera_to_robot", {})
-    translation = np.array(cam_to_robot.get("translation", [0.0, 0.0, 0.0]))
-    rotation_matrix = np.array(cam_to_robot.get("rotation_matrix", np.eye(3).tolist()))
-    logger.info("Calibration transform loaded.")
-    return CameraToRobotTransform(rotation_matrix, translation)
+if __name__ == "__main__":
+    main()
