@@ -2,7 +2,7 @@
 
 from typing import Dict, List
 
-from robot.dobot_controller import DobotController
+from dobot_movement.dobot_controller import DobotController
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
