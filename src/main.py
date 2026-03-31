@@ -20,6 +20,7 @@ import yaml
 from camera.camera_stream import CameraStream
 import calibration.calibration_matrices
 from calibration.transforms import load_calibration
+from calibration.transforms import calc_calibration
 from robot.dobot_controller import DobotController
 from vision.detector import Detector
 from vision.target_selector import TargetSelector
@@ -53,8 +54,22 @@ def main(args: argparse.Namespace) -> None:
     logger.info("Loading configurations …")
     robot_cfg = load_config(args.robot_config) #Robot settings
     camera_cfg = load_config(args.camera_config) #Camera Settings
-    calib_cfg = load_config(args.calibration_config) # Calibration Data
     classes_cfg = load_config(args.classes_config) 
+    
+    #Get calibration matrix
+    base_T_cam = calc_calibration()
+    # Upload Calibration data to yaml FILE
+    translation = base_T_cam[:3,3]
+    rotation = base_T_cam[:3,:3]
+    translation_list = translation.tolist()
+    rotation_list = rotation.tolist()
+    with open("calibration.yaml","r") as f:
+        data = yaml.safe_load(f)
+        data["calibration"]["camera_to_robot"]["translation"] = translation_list
+        data["calibration"]["camera_to_robot"]["rotation"] = rotation_list
+        
+    calib_cfg = load_config(args.calibration_config) # Calibration Data
+    
 
     #Start Camera
     logger.info("Initialising camera …")

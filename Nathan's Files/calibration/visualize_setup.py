@@ -17,6 +17,7 @@ from scipy.spatial.transform import Rotation as R
 from pydobotplus import Dobot
 import sys
 
+
 def get_dobot_port():
     """Load Dobot port from config file"""
     config_file = os.path.join(os.path.dirname(__file__), "..", "config", "device_port.yaml")
@@ -402,6 +403,14 @@ def main():
         device = Dobot(port=port)
         print("Connected successfully!")
         device.home()
+        
+        ctx = rs.context()
+        devices = ctx.query_devices()
+        if len(devices) == 0:
+            print("No device connected")
+        else:
+            for device in devices:
+              print(f"Device connected: {device.get_info(rs.camera_info.name)}")  
         
         # Initialize camera
         print("Initializing RealSense camera...")
