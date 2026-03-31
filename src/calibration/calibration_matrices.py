@@ -1,16 +1,6 @@
 #Calculates the Transformation matrices needed for calibration
 
-import os
-import yaml
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.animation import FuncAnimation
-import cv2
-import pyrealsense2 as rs
-from pupil_apriltags import Detector
-from scipy.spatial.transform import Rotation as R
-from pydobotplus import Dobot
 
 def get_robot_arm_matrix(pose):
     """
