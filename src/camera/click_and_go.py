@@ -22,7 +22,7 @@ import numpy as np
 import pyrealsense2 as rs
 import yaml
 
-from realsense_utils import (
+from rs_demo.realsense_utils import (
     get_aligned_frames,
     frames_to_numpy,
     pixel_to_3d,
