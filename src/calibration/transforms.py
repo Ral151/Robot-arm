@@ -522,6 +522,16 @@ def calc_calibration():
         traceback.print_exc()
         sys.exit(1)
         
+def update_calib_yaml(base_T_cam):
+    translation = base_T_cam[:3,3]
+    rotation = base_T_cam[:3,:3]
+    translation_list = translation.tolist()
+    rotation_list = rotation.tolist()
+    with open("calibration.yaml","r") as f:
+        data = yaml.safe_load(f)
+        data["calibration"]["camera_to_robot"]["translation"] = translation_list
+        data["calibration"]["camera_to_robot"]["rotation"] = rotation_list
+        
 def load_calibration(config: dict) -> CameraToRobotTransform:
     """Create a :class:`CameraToRobotTransform` from a calibration config dict.
 

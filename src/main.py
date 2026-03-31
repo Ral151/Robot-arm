@@ -19,8 +19,7 @@ import yaml
 
 from camera.camera_stream import CameraStream
 import calibration.calibration_matrices
-from calibration.transforms import load_calibration
-from calibration.transforms import calc_calibration
+from calibration.transforms import load_calibration,calc_calibration,update_calib_yaml
 from robot.dobot_controller import DobotController
 from vision.detector import Detector
 from vision.target_selector import TargetSelector
@@ -38,11 +37,9 @@ def signal_handler(sig, frame):
     logger.info("Shutdown signal received. Finishing current operation...")
     _running = False
 
-
 def load_config(path: str) -> dict:
     with open(path, "r") as f:
         return yaml.safe_load(f)
-
 
 def main(args: argparse.Namespace) -> None:
     global _running
@@ -50,6 +47,10 @@ def main(args: argparse.Namespace) -> None:
     # Register signal handler for graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
     
+    
+    #====================================================
+    # 1) LOAD ALL CONFIGURATIONS
+    #====================================================
     logger.info("=== Robot Arm Sorting Challenge ===")
     logger.info("Loading configurations …")
     robot_cfg = load_config(args.robot_config) #Robot settings
@@ -58,19 +59,14 @@ def main(args: argparse.Namespace) -> None:
     
     #Get calibration matrix
     base_T_cam = calc_calibration()
-    # Upload Calibration data to yaml FILE
-    translation = base_T_cam[:3,3]
-    rotation = base_T_cam[:3,:3]
-    translation_list = translation.tolist()
-    rotation_list = rotation.tolist()
-    with open("calibration.yaml","r") as f:
-        data = yaml.safe_load(f)
-        data["calibration"]["camera_to_robot"]["translation"] = translation_list
-        data["calibration"]["camera_to_robot"]["rotation"] = rotation_list
-        
+    #Upload Calibration data to yaml FILE
+    update_calib_yaml(base_T_cam)
     calib_cfg = load_config(args.calibration_config) # Calibration Data
     
 
+    #=====================================================
+    # 2) START & PREPARE DEVICES
+    #=====================================================
     #Start Camera
     logger.info("Initialising camera …")
     camera = CameraStream(camera_cfg)
@@ -97,6 +93,10 @@ def main(args: argparse.Namespace) -> None:
     # Statistics tracking
     stats: Dict[str, int] = {"nut": 0, "bolt": 0, "screw": 0, "total": 0, "failed": 0}
 
+    
+    #=====================================================
+    # 3) START LOOP
+    #=====================================================
     logger.info("="*50)
     logger.info("Starting continuous sorting loop.")
     logger.info("System will run until Ctrl+C or time limit.")
