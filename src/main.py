@@ -16,7 +16,6 @@ from typing import Dict
 
 import yaml
 
-
 from camera.camera_stream import CameraStream
 import calibration.calibration_matrices
 from calibration.transforms import load_calibration,calc_calibration,update_calib_yaml
@@ -29,7 +28,6 @@ logger = get_logger(__name__)
 
 # Global flag for graceful shutdown
 _running = True
-
 
 def signal_handler(sig, frame):
     # Handle Ctrl+C for graceful shutdown
@@ -46,7 +44,6 @@ def main(args: argparse.Namespace) -> None:
     
     # Register signal handler for graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
-    
     
     #====================================================
     # 1) LOAD ALL CONFIGURATIONS
