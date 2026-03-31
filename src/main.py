@@ -89,7 +89,6 @@ def main(args: argparse.Namespace) -> None:
     
     # Statistics tracking
     stats: Dict[str, int] = {"nut": 0, "bolt": 0, "screw": 0, "total": 0, "failed": 0}
-
     
     #=====================================================
     # 3) START LOOP
