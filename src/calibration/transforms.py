@@ -547,3 +547,9 @@ def load_calibration(config: dict) -> CameraToRobotTransform:
     rotation_matrix = np.array(cam_to_robot.get("rotation_matrix", np.eye(3).tolist()))
     logger.info("Calibration transform loaded.")
     return CameraToRobotTransform(rotation_matrix, translation)
+
+def get_robot_coords(base_T_cam,coords):
+    rotation = base_T_cam[:3,:3]
+    translation = base_T_cam[:3,3]
+    new_coords = rotation @ coords + translation
+    return new_coords[:3]
