@@ -20,7 +20,6 @@ from matplotlib.animation import FuncAnimation
 from scipy.spatial.transform import Rotation as R
 
 logger = get_logger(__name__)
-
 class CameraToRobotTransform:
     """Applies a rigid-body transform from camera frame to robot base frame."""
 
@@ -142,7 +141,6 @@ def draw_coordinate_frame(ax, T, scale=50.0, label="", colors=None):
         ax.text(text_pos[0], text_pos[1], text_pos[2], 
                f"{label}_{name}", fontsize=9, color=color, fontweight='bold')
 
-
 def get_robot_arm_matrix(pose):
     """
     Build a 4x4 transformation matrix (will transform point under gripper frame to base frame) in mm from a robot pose object.
@@ -180,10 +178,8 @@ def get_tag_to_camera_matrix(tag):
     cam_T_tag[:3,3] = tag.pose_t.flatten() * 1000
     
     return cam_T_tag
-
 class SetupVisualizer:
     """Real-time 3D visualization of complete setup: robot, camera, and AprilTag"""
-    
     def __init__(self, device, pipeline, align, detector, fx, fy, cx, cy, tag_size):
         self.device = device
         self.pipeline = pipeline
@@ -213,7 +209,7 @@ class SetupVisualizer:
         
         # Store latest tag detection
         self.latest_tag = None
-    def get_camera_T_tag(self):
+    def get_tag_T_camera(self):
         try:
             # ========================================
             # 1. Get camera frames and detect AprilTags
@@ -258,19 +254,16 @@ class SetupVisualizer:
             base_T_gripper = get_robot_arm_matrix(pose)
             
             # ========================================
-            # 4. Update 3D visualization
+            # 4. Get Cam_T_tag Matrix
             # ========================================
-            # Save current view angle before clearing
-            elev = self.ax_3d.elev
-            azim = self.ax_3d.azim
-            
-            self.ax_3d.clear()
-            
+            cam_T_tag = get_tag_to_camera_matrix(self.latest_tag)
+            tag_T_camera = np.linalg.inv(cam_T_tag)
+            base_T_tag = base_T_gripper @ self.gripper_T_tag
+            base_T_camera = base_T_tag @ tag_T_camera
         except Exception as e:
             print("oh no, error")
-        
-        return 
             
+        return base_T_camera
     
     def update(self, frame):
         """Update function called by animation"""
@@ -318,15 +311,6 @@ class SetupVisualizer:
             pose = self.device.get_pose()
             base_T_gripper = get_robot_arm_matrix(pose)
             
-            # ========================================
-            # 4. Get Cam_T_tag Matrix
-            # ========================================
-            cam_T_tag = get_tag_to_camera_matrix(self.latest_tag)
-            tag_T_camera = np.linalg.inv(cam_T_tag)
-            base_T_tag = base_T_gripper @ self.gripper_T_tag
-            base_T_camera = base_T_tag @ tag_T_camera
-            
-            '''Excluded Code'''
             # ========================================
             # 4. Update 3D visualization
             # ========================================
@@ -384,12 +368,10 @@ class SetupVisualizer:
                         [gripper_pos[2], tag_pos[2]], 
                         'purple', linestyle=':', linewidth=1.5, alpha=0.6)
             
-            #========================================
+            # ========================================
             # Draw CAMERA FRAME (if tag detected)
             # Compute camera position from: base_T_camera = base_T_tag @ inv(cam_T_tag)
-            #========================================
-            '''Excluded Code'''
-            
+            # ========================================
             if self.latest_tag is not None:
                 cam_T_tag = get_tag_to_camera_matrix(self.latest_tag)
                 tag_T_camera = np.linalg.inv(cam_T_tag)
@@ -512,11 +494,24 @@ def calc_calibration():
         print("Connected successfully!")
         device.home()
         
-        pose = device.get_pose()
-        robot_T_gripper = get_robot_arm_matrix(pose)
-        gripper_T_tag = get_tag_to_gripper_matrix()
-        tag_T_camera = get_tag_to_camera_matrix()
+        # Initialize camera
+        print("Initializing RealSense camera...")
+        pipeline, profile, align = initialize_pipeline()
+        fx, fy, cx, cy, _ = get_camera_intrinsics(profile)
+        print(f"Camera intrinsics: fx={fx:.2f}, fy={fy:.2f}, cx={cx:.2f}, cy={cy:.2f}")
         
+        # Initialize AprilTag detector
+        print("Initializing AprilTag detector...")
+        detector = Detector(families="tag36h11", nthreads=1, quad_decimate=1.0, 
+                           quad_sigma=0.0, refine_edges=1, decode_sharpening=0.25, debug=0)
+        tag_size = 0.0792  # Set the tag size in meters
+        print(f"Tag size: {tag_size} m = {tag_size * 1000} mm")
+        
+        #Getting the base_T_cam matrix
+        visualizer = SetupVisualizer(device, pipeline, align, detector, fx, fy, cx, cy, tag_size)
+        base_T_cam = visualizer.get_tag_T_camera()
+        
+        return base_T_cam
         
     except KeyboardInterrupt:
         print("\nInterrupted by user")
@@ -526,14 +521,6 @@ def calc_calibration():
         import traceback
         traceback.print_exc()
         sys.exit(1)
-    
-    #Get Dobot Pose
-    
-    #Get Robot_T_Gripper
-    
-    #Get Gripper_T_Tag
-    
-    #Get Tag_T_Camera
         
 def load_calibration(config: dict) -> CameraToRobotTransform:
     """Create a :class:`CameraToRobotTransform` from a calibration config dict.
