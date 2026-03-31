@@ -43,7 +43,13 @@ def load_device_config():
     config_path = os.path.join(os.path.dirname(__file__), "..", "config", "device_port.yaml")
     with open(config_path) as f:
         cfg = yaml.safe_load(f)
-    return cfg.get("camera_serial"), cfg.get("device_port")
+    camera_serial = cfg.get("camera_serial")
+    device_port   = cfg.get("device_port")
+    if "camera_serial" not in cfg:
+        camera_serial = 0
+    if "device_port" not in cfg:
+        device_port = None
+    return camera_serial, device_port
 
 
 def load_calibration(config_path: str):
