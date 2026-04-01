@@ -1,19 +1,22 @@
-"""
-Demo 2: Pixel to 3D Coordinate Conversion
-==========================================
-This demo shows how to:
-1. Convert pixel coordinates (x, y) to 3D world coordinates (X, Y, Z)
-2. Use camera intrinsics and depth information
-3. Handle mouse clicks to interactively explore 3D coordinates
 
-Click on the image to see the 3D coordinates of that pixel.
-Press 'q' to quit.
-"""
 
-import pyrealsense2 as rs
+import argparse, signal, sys, yaml, cv2
 import numpy as np
-import cv2
-from realsense_utils import (
+import pyrealsense2 as rs
+from pydobotplus import Dobot
+from typing import Dict
+import calibration.calibration_matrices
+from calibration.transforms import load_calibration,calc_calibration,update_calib_yaml
+from Dobot.Dobot_movement import DobotController
+from Dobot.ports import check_port,get_dobot_port
+from camera.camera_stream import CameraStream
+from camera.rs_demo import realsense_utils as rs_utils
+from camera.rs_demo import realsense_pixel_to_3d as rs_p3d
+from vision.detector import Detector
+from vision.target_selector import TargetSelector
+from utils.logger import get_logger
+
+from camera.rs_demo.realsense_utils import (
     initialize_pipeline,
     get_camera_intrinsics,
     get_aligned_frames,
@@ -69,6 +72,11 @@ class RealSense3DConverter:
         
         # Create alignment object
         self.align = rs.align(rs.stream.color)
+        
+        # Set dobot device
+        device_port = get_dobot_port()
+        self.device = Dobot(port = device_port)
+        self.device.home()
         
         # Store clicked point
         self.clicked_point = None
@@ -144,6 +152,7 @@ class RealSense3DConverter:
                         self.intrinsics, x, y, depth_frame
                     )
                     
+                    self.device.move_to(P_camera[0][0],P_camera[1][0],P_camera[2][0],P_camera[3][0])
                     
                     # Draw crosshair at clicked location
                     self.draw_crosshair(color_image, x, y)
@@ -226,7 +235,8 @@ class RealSense3DConverter:
 
 
 def main():
-    converter = RealSense3DConverter()
+    check_port()
+    converter = RealSense3DConverter(device_port)
     P_camera = converter.run()
 
 
