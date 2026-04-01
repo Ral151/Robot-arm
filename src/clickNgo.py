@@ -10,8 +10,6 @@ from calibration.transforms import load_calibration,calc_calibration,update_cali
 from Dobot.Dobot_movement import DobotController
 from Dobot.ports import check_port,get_dobot_port
 from camera.camera_stream import CameraStream
-from camera.rs_demo import realsense_utils as rs_utils
-from camera.rs_demo import realsense_pixel_to_3d as rs_p3d
 from vision.detector import Detector
 from vision.target_selector import TargetSelector
 from utils.logger import get_logger
@@ -151,8 +149,7 @@ class RealSense3DConverter:
                     P_camera = pixel_to_homogeneous_point(
                         self.intrinsics, x, y, depth_frame
                     )
-                    
-                    self.device.move_to(P_camera[0][0],P_camera[1][0],P_camera[2][0],P_camera[3][0])
+
                     
                     # Draw crosshair at clicked location
                     self.draw_crosshair(color_image, x, y)
@@ -164,6 +161,7 @@ class RealSense3DConverter:
                         # Convert to millimeters for easier reading
                         X_mm, Y_mm, Z_mm = X * 1000, Y * 1000, Z * 1000
                         
+                        self.device.move_to(X_mm, Y_mm, Z_mm, wait=True)
                         # Print to console
                         print(f"\n{'='*60}")
                         print(f"Pixel: ({x}, {y})")
@@ -231,12 +229,10 @@ class RealSense3DConverter:
             print("\n" + "=" * 70)
             print("Demo completed!")
             print("=" * 70)
-            return P_camera
 
 
 def main():
-    check_port()
-    converter = RealSense3DConverter(device_port)
+    converter = RealSense3DConverter()
     P_camera = converter.run()
 
 

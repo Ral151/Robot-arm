@@ -22,7 +22,9 @@ class Detection:
 
     @property
     def centroid(self, roi: List[int] = None) -> Tuple[float, float]:
-        """Return the centre pixel of the bounding box and convert it into full frame coordinates."""
+        """Return the centre pixel of the bounding box and convert it into full frame coordinates.
+           roi = [ROI_x1, ROI_y1, ROI_x2, ROI_y2]
+        """
         x1, y1, x2, y2 = self.bbox
         cx = (x1 + x2) / 2.0
         cy = (y1 + y2) / 2.0

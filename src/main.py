@@ -110,9 +110,9 @@ def main(args: argparse.Namespace) -> None:
             if frame_roi is None:
                 continue
 
-            # Detect objects in the frame
+            # Detect objects in the ROI frame
             detections_roi = detector.detect(frame_roi)
-            # Need to get full frame bounding boxes 
+            
             target = selector.select(detections_roi) 
 
             if target is None:
@@ -122,7 +122,7 @@ def main(args: argparse.Namespace) -> None:
             cycle_count += 1
             logger.info(f"[Cycle {cycle_count}] Detected: {target.label} (conf={target.confidence:.2f})")
             
-            # Convert pixel coordinates to robot coordinates
+            # Convert pixel coordinates to robot coordinates using real frame coordinates
             robot_coords = transform.image_to_robot(target.centroid)
             logger.info(f"  Image {target.centroid} → Robot {robot_coords}")
             

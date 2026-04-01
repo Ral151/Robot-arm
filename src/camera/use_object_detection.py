@@ -88,6 +88,12 @@ def object_detection():
                     # Extract box coordinates
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
 
+                    # Convert box to full-frame coordinates
+                    x1_full = ROI_X1 + x1
+                    y1_full = ROI_Y1 + y1
+                    x2_full = ROI_X1 + x2
+                    y2_full = ROI_Y1 + y2
+
                     # Center in ROI coordinates
                     cx_roi = int((x1 + x2) / 2)
                     cy_roi = int((y1 + y2) / 2)
@@ -120,12 +126,13 @@ def object_detection():
                         1
                     )
 
-                    # Circle on full frame in the center of detected objects
+                    # Draw detection on full frame
+                    cv2.rectangle(display_full, (x1_full, y1_full), (x2_full, y2_full), (0, 255, 0), 2)
                     cv2.circle(display_full, (cx_full, cy_full), 5, (0, 0, 255), -1)
                     cv2.putText(
                         display_full,
-                        f"{class_name}",
-                        (cx_full + 5, cy_full - 5),
+                        label,
+                        (x1_full, max(y1_full - 10, 20)),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         0.5,
                         (0, 255, 0),
