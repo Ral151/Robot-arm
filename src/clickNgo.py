@@ -1,5 +1,8 @@
 
 
+import os
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 import argparse, signal, sys, yaml, cv2
 import numpy as np
 import pyrealsense2 as rs
@@ -60,7 +63,7 @@ class RealSense3DConverter:
         self.pipeline, profile, config = initialize_pipeline(width=640, height=480, fps=30)
         
         # Get camera intrinsics
-        self.intrinsics = get_camera_intrinsics(profile)
+        self.intrinsics= get_camera_intrinsics(profile)
         
         # Create alignment object
         self.align = rs.align(rs.stream.color)
