@@ -165,7 +165,7 @@ class RealSense3DConverter:
                         P_camera = np.array([[X_mm],[Y_mm],[Z_mm],[1.0]], dtype=np.float64)
                         target_coords = base_T_cam @ P_camera
                         X,Y,Z = target_coords[0][0],target_coords[1][0],target_coords[2][0]
-                        self.device.move_dobot(X,Y,Z,0,True)
+                        move_dobot(self.device,X,Y,Z,0,True)
                         # Print to console
                         print(f"\n{'='*60}")
                         print(f"Pixel: ({x}, {y})")
