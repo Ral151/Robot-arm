@@ -17,7 +17,7 @@ class DobotController:
 
     def __init__(self, config: dict) -> None:
         robot_cfg = config.get("robot", {})
-        self._port: str = robot_cfg.get("port", "/dev/ttyUSB0")
+        self._port: str = robot_cfg.get("port", "COM6")
         self._speed: int = robot_cfg.get("speed", 50)
         self._acceleration: int = robot_cfg.get("acceleration", 50)
         self._home: Dict[str, float] = robot_cfg.get(

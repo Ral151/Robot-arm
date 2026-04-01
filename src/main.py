@@ -75,8 +75,8 @@ def main(args: argparse.Namespace) -> None:
     #Start Robot
     logger.info("Initialising robot …")
     device_port = check_port()
-    device = Dobot(port=device_port)
-    device.home()
+    robot  = DobotController(robot_cfg)
+    robot.home()  
 
     #Preparing Calibration Data
     logger.info("Loading calibration …")
@@ -133,6 +133,8 @@ def main(args: argparse.Namespace) -> None:
                 
                 # Execute pick and place
                 try:
+                    """Need to consider the real frame bounding boxes to determine the size of the object and adjust the gripper
+                    accordingly. Ie. if the bounding boxes create a 90 degree angle, the gripper should rotate to match that angle."""
                     robot.pick(robot_coords)
                     robot.place(target_bin)
                     
