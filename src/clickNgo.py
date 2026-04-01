@@ -7,6 +7,7 @@ from pydobotplus import Dobot
 from typing import Dict
 from calibration.apriltag_detection import get_apriltag_object
 from calibration.transforms import calc_calibration,update_calib_yaml,get_target_coords
+
 from Dobot.Dobot_movement import DobotController
 from Dobot.ports import check_port,get_dobot_port
 from camera.camera_stream import CameraStream
@@ -240,7 +241,6 @@ class RealSense3DConverter:
             
 
 def main():
-    check_port()
     converter = RealSense3DConverter()
     P_camera = converter.run()
 

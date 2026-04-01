@@ -11,7 +11,7 @@ from utils.logger import get_logger
 from utils.get_port import get_dobot_port
 from utils.camera_functions import initialize_pipeline
 from utils.camera_functions import get_camera_intrinsics
-from calibration_matrices import get_dobot_to_gripper_matrix, get_gripper_to_tag_matrix, get_tag_to_camera_matrix
+from .calibration_matrices import get_dobot_to_gripper_matrix, get_gripper_to_tag_matrix, get_tag_to_camera_matrix
 
 from typing import Dict, Tuple
 from pydobotplus import Dobot
