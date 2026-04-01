@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Demo 2: Pixel to 3D Coordinate Conversion
 ==========================================
@@ -22,6 +21,40 @@ from realsense_utils import (
     pixel_to_3d,
     print_camera_info
 )
+
+
+def pixel_to_homogeneous_point(intrinsics, x: int, y: int, depth_frame):
+    """
+    Convert a pixel (x, y) and its depth into a 4x1 homogeneous column
+    vector in the camera frame, ready for matrix multiplication.
+
+    Returns:
+        numpy array of shape (4, 1):
+            [[X],   <- metres
+             [Y],   <- metres
+             [Z],   <- metres (depth)
+             [0]]   <- homogeneous coordinate
+
+        or None if depth is invalid at that pixel.
+
+    Usage by teammate:
+        P_camera = pixel_to_homogeneous_point(intrinsics, x, y, depth_frame)
+        if P_camera is not None:
+            P_robot = base_T_camera @ P_camera
+    """
+    point_3d = pixel_to_3d(intrinsics, x, y, depth_frame)
+
+    if point_3d is None:
+        return None
+
+    X, Y, Z = point_3d
+
+    return np.array([
+        [X],
+        [Y],
+        [Z],
+        [0]
+    ], dtype=np.float64)
 
 
 class RealSense3DConverter:
@@ -105,17 +138,19 @@ class RealSense3DConverter:
                 # If a point was clicked, process it
                 if self.clicked_point is not None:
                     x, y = self.clicked_point
-                    
-                    # Convert pixel to 3D using utility function
-                    point_3d = pixel_to_3d(self.intrinsics, x, y, depth_frame)
+
+                    # Convert pixel to 4x1 homogeneous point
+                    P_camera = pixel_to_homogeneous_point(
+                        self.intrinsics, x, y, depth_frame
+                    )
                     
                     # Draw crosshair at clicked location
                     self.draw_crosshair(color_image, x, y)
                     
                     # Display information
-                    if point_3d is not None:
-                        X, Y, Z = point_3d
-                        
+                    if P_camera is not None:
+                        X, Y, Z = P_camera[0,0], P_camera[1,0], P_camera[2,0]
+
                         # Convert to millimeters for easier reading
                         X_mm, Y_mm, Z_mm = X * 1000, Y * 1000, Z * 1000
                         
@@ -127,6 +162,7 @@ class RealSense3DConverter:
                         print(f"  Y = {Y_mm:7.1f} mm")
                         print(f"  Z = {Z_mm:7.1f} mm (depth)")
                         print(f"  Distance: {np.sqrt(X**2 + Y**2 + Z**2)*1000:.1f} mm")
+                        print(f"P_camera (4x1):\n{P_camera}")
                         print(f"{'='*60}")
                         
                         # Draw info on image
