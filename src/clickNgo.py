@@ -7,13 +7,8 @@ from pydobotplus import Dobot
 from typing import Dict
 from calibration.apriltag_detection import get_apriltag_object
 from calibration.transforms import calc_calibration,update_calib_yaml,get_target_coords
-
-from Dobot.Dobot_movement import DobotController
 from Dobot.ports import check_port,get_dobot_port
-from camera.camera_stream import CameraStream
-from vision.detector import Detector
-from vision.target_selector import TargetSelector
-from utils.logger import get_logger
+from Dobot.movement import move_dobot
 
 from camera.rs_demo.realsense_utils import (
     initialize_pipeline,
@@ -167,8 +162,7 @@ class RealSense3DConverter:
                         P_camera = np.array([[X_mm],[Y_mm],[Z_mm],[1.0]], dtype=np.float64)
                         target_coords = base_T_cam @ P_camera
                         X,Y,Z = target_coords[0][0],target_coords[1][0],target_coords[2][0]
-                        self.device.move_to(X,Y,Z,0)
-                        
+                        self.device.move_dobot(X,Y,Z,0,True)
                         # Print to console
                         print(f"\n{'='*60}")
                         print(f"Pixel: ({x}, {y})")
@@ -220,6 +214,8 @@ class RealSense3DConverter:
                 
                 # Show image
                 cv2.imshow(window_name, color_image)
+                
+                self.clicked_point = None
                 
                 # Handle key press
                 key = cv2.waitKey(1) & 0xFF
