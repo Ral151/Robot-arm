@@ -54,9 +54,8 @@ def rotation_matrix_to_euler_angles(rotation_matrix):
     roll, pitch, yaw = r.as_euler('xyz', degrees=True)
     return roll, pitch, yaw
 
-def get_apriltag_object():
-    pipeline, profile, align = initialize_pipeline()
-    fx, fy, cx, cy, _ = get_camera_intrinsics(profile)
+def get_apriltag_object(pipeline,align,intrinsics):
+    fx,fy,cx,cy = intrinsics.fx,intrinsics.fy,intrinsics.cx,intrinsics.cy
     detector = Detector(families="tag36h11", nthreads=1, quad_decimate=1.0, quad_sigma=0.0, refine_edges=1, decode_sharpening=0.25, debug=0)
     tag_size = 0.0792  # Set the tag size in meters
 
@@ -81,5 +80,3 @@ def get_apriltag_object():
     pipeline.stop()
     cv2.destroyAllWindows()
 
-if __name__ == "__main__":
-    get_apriltag_object()

@@ -55,7 +55,7 @@ def pixel_to_homogeneous_point(intrinsics, x: int, y: int, depth_frame):
         [X],
         [Y],
         [Z],
-        [0]
+        [1]
     ], dtype=np.float64)
 class RealSense3DConverter:
     """Interactive demo for converting 2D pixels to 3D coordinates"""
@@ -145,9 +145,7 @@ class RealSense3DConverter:
                     x, y = self.clicked_point
 
                     # Convert pixel to 4x1 homogeneous point
-                    P_camera = pixel_to_homogeneous_point(
-                        self.intrinsics, x, y, depth_frame
-                    )
+                    P_camera = pixel_to_homogeneous_point(self.intrinsics, x, y, depth_frame)
                     
                     # Draw crosshair at clicked location
                     self.draw_crosshair(color_image, x, y)
@@ -160,16 +158,16 @@ class RealSense3DConverter:
                         X_mm, Y_mm, Z_mm = X * 1000, Y * 1000, Z * 1000
                         
                         # Detect Apriltag
-                        apriltag = get_apriltag_object()
+                        apriltag = get_apriltag_object(self.pipeline,self.align,self.intrinsics)
                         
                         # Get base_T_cam matrix
                         base_T_cam = calc_calibration(self.device,apriltag)
                         
                         # Apply matrix transformation
-                        P_camera = np.array([[X_mm],[Y_mm],[Z_mm],[0]])
-                        target_coords = get_target_coords(base_T_cam,P_camera)
-                        x = target_coords[0][0], y = target_coords[1][0], z = target_coords[2][0]
-                        self.device.move_to(x,y,z,0)
+                        P_camera = np.array([[X_mm],[Y_mm],[Z_mm],[1.0]], dtype=np.float64)
+                        target_coords = base_T_cam @ P_camera
+                        X,Y,Z = target_coords[0][0],target_coords[1][0],target_coords[2][0]
+                        self.device.move_to(X,Y,Z,0)
                         
                         # Print to console
                         print(f"\n{'='*60}")
