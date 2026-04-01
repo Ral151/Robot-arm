@@ -55,7 +55,7 @@ def rotation_matrix_to_euler_angles(rotation_matrix):
     return roll, pitch, yaw
 
 def get_apriltag_object(pipeline,align,intrinsics):
-    fx,fy,cx,cy = intrinsics.fx,intrinsics.fy,intrinsics.cx,intrinsics.cy
+    fx,fy,cx,cy = intrinsics.fx,intrinsics.fy,intrinsics.ppx,intrinsics.ppy
     detector = Detector(families="tag36h11", nthreads=1, quad_decimate=1.0, quad_sigma=0.0, refine_edges=1, decode_sharpening=0.25, debug=0)
     tag_size = 0.0792  # Set the tag size in meters
 
