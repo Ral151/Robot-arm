@@ -139,7 +139,7 @@ def pixel_to_3d(intrinsics, pixel_x, pixel_y, depth_frame):
         depth
     )
     
-    return point_3d
+    return point_3d #IN METERS
 
 
 def point_3d_to_pixel(intrinsics, point_3d):
