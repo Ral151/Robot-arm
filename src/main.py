@@ -112,7 +112,6 @@ def main(args: argparse.Namespace) -> None:
 
             # Detect objects in the ROI frame
             detections_roi = detector.detect(frame_roi)
-
             target = selector.select(detections_roi)
 
             if target is None:
