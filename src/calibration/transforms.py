@@ -32,7 +32,7 @@ def update_calib_yaml(base_T_cam):
     rotation = base_T_cam[:3,:3]
     translation_list = translation.tolist()
     rotation_list = rotation.tolist()
-    with open(config_path, "r") as f:
+    with open("../../configs/calibration", "r") as f:
         data = yaml.safe_load(f)
         data["calibration"]["camera_to_robot"]["translation"] = translation_list
         data["calibration"]["camera_to_robot"]["rotation"] = rotation_list
