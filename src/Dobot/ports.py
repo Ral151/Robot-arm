@@ -3,12 +3,6 @@ import os,yaml
 from pydobotplus import Dobot
 from serial.tools import list_ports
 
-def get_dobot_port():
-    config_file = os.path.join(os.path.dirname(__file__), "..", "config", "device_port.yaml")
-    with open(config_file, "r") as file:
-        config = yaml.safe_load(file)
-    return config["device_port"]
-
 def check_port():
     config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
     os.makedirs(config_dir, exist_ok=True)
@@ -34,3 +28,10 @@ def check_port():
         yaml.dump(config_data, file)
 
     print(f"Device port and camera serial(s) saved to {config_file}")
+    
+def get_dobot_port():
+    config_file = os.path.join(os.path.dirname(__file__), "..", "config", "device_port.yaml")
+    with open(config_file, "r") as file:
+        config = yaml.safe_load(file)
+    return config["device_port"]
+

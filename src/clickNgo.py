@@ -6,7 +6,8 @@ import pyrealsense2 as rs
 from pydobotplus import Dobot
 from typing import Dict
 import calibration.calibration_matrices
-from calibration.transforms import load_calibration,calc_calibration,update_calib_yaml
+from calibration.apriltag_detection import get_apriltag_object
+from calibration.transforms import calc_calibration,update_calib_yaml,get_target_coords
 from Dobot.Dobot_movement import DobotController
 from Dobot.ports import check_port,get_dobot_port
 from camera.camera_stream import CameraStream
@@ -58,8 +59,6 @@ def pixel_to_homogeneous_point(intrinsics, x: int, y: int, depth_frame):
         [Z],
         [0]
     ], dtype=np.float64)
-
-
 class RealSense3DConverter:
     """Interactive demo for converting 2D pixels to 3D coordinates"""
     
@@ -152,8 +151,6 @@ class RealSense3DConverter:
                         self.intrinsics, x, y, depth_frame
                     )
                     
-                    self.device.move_to(P_camera[0][0],P_camera[1][0],P_camera[2][0],P_camera[3][0])
-                    
                     # Draw crosshair at clicked location
                     self.draw_crosshair(color_image, x, y)
                     
@@ -163,6 +160,18 @@ class RealSense3DConverter:
 
                         # Convert to millimeters for easier reading
                         X_mm, Y_mm, Z_mm = X * 1000, Y * 1000, Z * 1000
+                        
+                        # Detect Apriltag
+                        apriltag = get_apriltag_object()
+                        
+                        # Get base_T_cam matrix
+                        base_T_cam = calc_calibration(self.device,apriltag)
+                        
+                        # Apply matrix transformation
+                        P_camera = np.array([[X_mm],[Y_mm],[Z_mm],[0]])
+                        target_coords = get_target_coords(base_T_cam,P_camera)
+                        x = target_coords[0][0], y = target_coords[1][0], z = target_coords[2][0]
+                        self.device.move_to(x,y,z,0)
                         
                         # Print to console
                         print(f"\n{'='*60}")
@@ -231,12 +240,11 @@ class RealSense3DConverter:
             print("\n" + "=" * 70)
             print("Demo completed!")
             print("=" * 70)
-            return P_camera
-
+            
 
 def main():
     check_port()
-    converter = RealSense3DConverter(device_port)
+    converter = RealSense3DConverter()
     P_camera = converter.run()
 
 

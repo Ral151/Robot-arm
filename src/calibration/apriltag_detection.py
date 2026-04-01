@@ -54,7 +54,7 @@ def rotation_matrix_to_euler_angles(rotation_matrix):
     roll, pitch, yaw = r.as_euler('xyz', degrees=True)
     return roll, pitch, yaw
 
-def main():
+def get_apriltag_object():
     pipeline, profile, align = initialize_pipeline()
     fx, fy, cx, cy, _ = get_camera_intrinsics(profile)
     detector = Detector(families="tag36h11", nthreads=1, quad_decimate=1.0, quad_sigma=0.0, refine_edges=1, decode_sharpening=0.25, debug=0)
@@ -71,31 +71,8 @@ def main():
         tags = detector.detect(gray_image, estimate_tag_pose=True, camera_params=[fx, fy, cx, cy], tag_size=tag_size)
 
         if tags:
-            for tag in tags:
-                draw_green_box(color_image, tag)
-                print("=" * 60)
-                print(f"Tag ID: {tag.tag_id}")
-                print(f"Center (px): ({tag.center[0]:.2f}, {tag.center[1]:.2f})")
-                print(f"Translation (m):")
-                print(f"  X: {tag.pose_t[0][0]:8.4f}")
-                print(f"  Y: {tag.pose_t[1][0]:8.4f}")
-                print(f"  Z: {tag.pose_t[2][0]:8.4f}")
-                print(f"Rotation Matrix:")
-                print(f"  [{tag.pose_R[0][0]:7.4f}, {tag.pose_R[0][1]:7.4f}, {tag.pose_R[0][2]:7.4f}]")
-                print(f"  [{tag.pose_R[1][0]:7.4f}, {tag.pose_R[1][1]:7.4f}, {tag.pose_R[1][2]:7.4f}]")
-                print(f"  [{tag.pose_R[2][0]:7.4f}, {tag.pose_R[2][1]:7.4f}, {tag.pose_R[2][2]:7.4f}]")
-                
-                # Convert rotation matrix to Euler angles
-                roll, pitch, yaw = rotation_matrix_to_euler_angles(tag.pose_R)
-                print(f"Euler Angles (degrees):")
-                print(f"  Roll:  {roll:7.2f}°")
-                print(f"  Pitch: {pitch:7.2f}°")
-                print(f"  Yaw:   {yaw:7.2f}°")
-                
-                # According to the AprilTag documentation (https://pupil-apriltags.readthedocs.io/en/latest/api.html),
-                # tag.pose_R is the rotation matrix and tag.pose_t is the translation vector.
+            return tags[0]
 
-        cv2.imshow("AprilTag Detection", color_image)
         key = cv2.waitKey(1) & 0xFF
 
         if key == ord("q"):
@@ -105,4 +82,4 @@ def main():
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    main()
+    get_apriltag_object()
