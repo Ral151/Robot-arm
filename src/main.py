@@ -19,7 +19,9 @@ import yaml
 from camera.camera_stream import CameraStream
 import calibration.calibration_matrices
 from calibration.transforms import load_calibration,calc_calibration,update_calib_yaml
-from robot.dobot_controller import DobotController
+from Dobot.Dobot_movement import DobotController
+from Dobot.ports import check_port,get_dobot_port
+from pydobotplus import Dobot
 from vision.detector import Detector
 from vision.target_selector import TargetSelector
 from utils.logger import get_logger
@@ -71,8 +73,9 @@ def main(args: argparse.Namespace) -> None:
 
     #Start Robot
     logger.info("Initialising robot …")
-    robot = DobotController(robot_cfg)
-    robot.home()
+    device_port = check_port()
+    device = Dobot(port=device_port)
+    device.home()
 
     #Preparing Calibration Data
     logger.info("Loading calibration …")
