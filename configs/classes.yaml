@@ -2,12 +2,12 @@
 # Format: id: name
 classes:
   0: nut
-  1: bolt
-  2: screw
+  1: long_bolt
+  2: short_bolt
 
 # Detection thresholds per class (optional overrides)
 thresholds:
   default: 0.5
   nut: 0.55
-  bolt: 0.55
-  screw: 0.55
+  long_bolt: 0.55
+  short_bolt: 0.55

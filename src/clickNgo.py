@@ -11,8 +11,6 @@ from calibration.transforms import calc_calibration,update_calib_yaml,get_target
 from Dobot.Dobot_movement import DobotController
 from Dobot.ports import check_port,get_dobot_port
 from camera.camera_stream import CameraStream
-from camera.rs_demo import realsense_utils as rs_utils
-from camera.rs_demo import realsense_pixel_to_3d as rs_p3d
 from vision.detector import Detector
 from vision.target_selector import TargetSelector
 from utils.logger import get_logger

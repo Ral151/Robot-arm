@@ -92,12 +92,12 @@ def main(args: argparse.Namespace) -> None:
                        (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
             if target is not None:
-                cx, cy = target.centroid
+                cx, cy = target.centroid()
                 cv2.circle(annotated, (int(cx), int(cy)), 10, (0, 0, 255), -1)
                 cv2.putText(annotated, f"Target: {target.label}", (int(cx)+15, int(cy)),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                
-                robot_coords = transform.image_to_robot(target.centroid)
+
+                robot_coords = transform.image_to_robot(target.centroid())
                 target_label = target.label.lower()
                 
                 if target_label in sorting_bins:

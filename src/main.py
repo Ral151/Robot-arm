@@ -60,7 +60,7 @@ def main(args: argparse.Namespace) -> None:
     #Get calibration matrix
     base_T_cam = calc_calibration()
     #Upload Calibration data to yaml FILE
-    update_calib_yaml(base_T_cam)
+    update_calib_yaml(base_T_cam, args.calibration_config)
     calib_cfg = load_config(args.calibration_config) # Calibration Data
     
 
@@ -75,8 +75,8 @@ def main(args: argparse.Namespace) -> None:
     #Start Robot
     logger.info("Initialising robot …")
     device_port = check_port()
-    device = Dobot(port=device_port)
-    device.home()
+    robot  = DobotController(robot_cfg)
+    robot.home()  
 
     #Preparing Calibration Data
     logger.info("Loading calibration …")
@@ -106,12 +106,14 @@ def main(args: argparse.Namespace) -> None:
         cycle_count = 0
         while _running:
             frame = camera.read()
-            if frame is None:
+            frame_roi = camera.read_roi()
+            if frame_roi is None:
                 continue
 
-            # Detect objects in the frame
-            detections = detector.detect(frame)
-            target = selector.select(detections)
+            # Detect objects in the ROI frame
+            detections_roi = detector.detect(frame_roi)
+
+            target = selector.select(detections_roi)
 
             if target is None:
                 # No valid target found, continue to next frame
@@ -120,9 +122,11 @@ def main(args: argparse.Namespace) -> None:
             cycle_count += 1
             logger.info(f"[Cycle {cycle_count}] Detected: {target.label} (conf={target.confidence:.2f})")
             
-            # Convert pixel coordinates to robot coordinates
-            robot_coords = transform.image_to_robot(target.centroid)
-            logger.info(f"  Image {target.centroid} → Robot {robot_coords}")
+            # Convert pixel coordinates to robot coordinates using real frame coordinates
+            roi = camera.get_roi()
+            target_centroid = target.centroid(roi)
+            robot_coords = transform.image_to_robot(target_centroid)
+            logger.info(f"  Image {target_centroid} → Robot {robot_coords}")
             
             # Determine target bin based on object class
             target_label = target.label.lower()
@@ -131,6 +135,8 @@ def main(args: argparse.Namespace) -> None:
                 
                 # Execute pick and place
                 try:
+                    """Need to consider the real frame bounding boxes to determine the size of the object and adjust the gripper
+                    accordingly. Ie. if the bounding boxes create a 90 degree angle, the gripper should rotate to match that angle."""
                     robot.pick(robot_coords)
                     robot.place(target_bin)
                     

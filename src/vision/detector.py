@@ -34,14 +34,6 @@ class Detector:
             logger.warning(f"Model file not found at {model_path} – using stub detector.")
 
     def detect(self, frame: np.ndarray) -> List[Detection]:
-        """Run inference on a BGR frame and return a list of :class:`Detection` objects.
-
-        Args:
-            frame: BGR image as a numpy array.
-
-        Returns:
-            List of :class:`~vision.postprocess.Detection` instances.
-        """
         if self._model is None:
             return []
 
@@ -52,15 +44,18 @@ class Detector:
                 cls_id = int(box.cls[0])
                 conf = float(box.conf[0])
                 label = self._classes.get(cls_id, str(cls_id))
+
                 threshold = self._thresholds.get(label, self._default_threshold)
                 if conf < threshold:
                     continue
-                xyxy = box.xyxy[0].cpu().numpy()
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+
+                label_on_image = f"{label} {conf:.2f}"
                 detections.append(
                     Detection(
                         label=label,
                         confidence=conf,
-                        bbox=tuple(xyxy.tolist()),
+                        bbox=(x1, y1, x2, y2),
                     )
                 )
         return detections
