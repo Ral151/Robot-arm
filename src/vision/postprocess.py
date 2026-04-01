@@ -20,8 +20,7 @@ class Detection:
     confidence: float
     bbox: Tuple[float, float, float, float]
 
-    @property
-    def centroid(self, roi: List[int] = None) -> Tuple[float, float]:
+    def centroid(self, roi: Optional[List[int]] = None) -> Tuple[float, float]:
         """Return the centre pixel of the bounding box and convert it into full frame coordinates.
            roi = [ROI_x1, ROI_y1, ROI_x2, ROI_y2]
         """

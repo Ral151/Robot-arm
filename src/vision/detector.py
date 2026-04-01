@@ -56,7 +56,6 @@ class Detector:
                         label=label,
                         confidence=conf,
                         bbox=(x1, y1, x2, y2),
-                        label_on_image=label_on_image,
                     )
                 )
         return detections

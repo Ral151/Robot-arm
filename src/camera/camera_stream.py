@@ -20,6 +20,13 @@ class CameraStream:
         self._fps: int = cam_cfg.get("fps", 30)
         self._flip: bool = cam_cfg.get("flip", False)
         self._camera_serial: Optional[str] = cam_cfg.get("serial", 0)
+        roi_cfg = cam_cfg.get("roi", {})
+        self._roi = [
+            roi_cfg.get("x1", 325),
+            roi_cfg.get("y1", 201),
+            roi_cfg.get("x2", 556),
+            roi_cfg.get("y2", 413),
+        ]
 
         # RealSense pipeline
         self._pipeline: Optional[rs.pipeline] = None
@@ -62,10 +69,7 @@ class CameraStream:
 
     def _capture_loop(self) -> None:
         """Background thread that continuously grabs frames from RealSense."""
-        ROI_X1 = 325
-        ROI_Y1 = 201
-        ROI_X2 = 556
-        ROI_Y2 = 413
+        roi_x1, roi_y1, roi_x2, roi_y2 = self._roi
 
         while self._running:
             frames = self._pipeline.wait_for_frames()
@@ -77,9 +81,9 @@ class CameraStream:
             if color_frame and depth_frame:
                 color_img = np.asanyarray(color_frame.get_data())
                 depth_img = np.asanyarray(depth_frame.get_data())
-                roi = color_img[ROI_Y1:ROI_Y2, ROI_X1:ROI_X2]
+                roi = color_img[roi_y1:roi_y2, roi_x1:roi_x2]
                 display_roi = roi.copy()
-                color_full_roi = cv2.rectangle(color_img.copy(), (ROI_X1, ROI_Y1), (ROI_X2, ROI_Y2), (255, 0, 0), 2)
+                color_full_roi = cv2.rectangle(color_img.copy(),(roi_x1, roi_y1),(roi_x2, roi_y2),(255, 0, 0),2,)
 
                 if self._flip:
                     color_img = np.fliplr(color_img)
@@ -103,6 +107,10 @@ class CameraStream:
         """Return the latest ROI color frame."""
         with self._lock:
             return self._roi_frame.copy() if self._roi_frame is not None else None
+
+    def get_roi(self) -> list:
+        """Return ROI bounds as [x1, y1, x2, y2]."""
+        return list(self._roi)
 
     def get_intrinsics(self) -> Optional[rs.intrinsics]:
         """Return camera intrinsics (fx, fy, cx, cy, coeffs)."""

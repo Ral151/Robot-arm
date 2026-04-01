@@ -60,7 +60,7 @@ def main(args: argparse.Namespace) -> None:
     #Get calibration matrix
     base_T_cam = calc_calibration()
     #Upload Calibration data to yaml FILE
-    update_calib_yaml(base_T_cam)
+    update_calib_yaml(base_T_cam, args.calibration_config)
     calib_cfg = load_config(args.calibration_config) # Calibration Data
     
 
@@ -112,8 +112,8 @@ def main(args: argparse.Namespace) -> None:
 
             # Detect objects in the ROI frame
             detections_roi = detector.detect(frame_roi)
-            
-            target = selector.select(detections_roi) 
+
+            target = selector.select(detections_roi)
 
             if target is None:
                 # No valid target found, continue to next frame
@@ -123,8 +123,10 @@ def main(args: argparse.Namespace) -> None:
             logger.info(f"[Cycle {cycle_count}] Detected: {target.label} (conf={target.confidence:.2f})")
             
             # Convert pixel coordinates to robot coordinates using real frame coordinates
-            robot_coords = transform.image_to_robot(target.centroid)
-            logger.info(f"  Image {target.centroid} → Robot {robot_coords}")
+            roi = camera.get_roi()
+            target_centroid = target.centroid(roi)
+            robot_coords = transform.image_to_robot(target_centroid)
+            logger.info(f"  Image {target_centroid} → Robot {robot_coords}")
             
             # Determine target bin based on object class
             target_label = target.label.lower()
