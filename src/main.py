@@ -102,12 +102,14 @@ def main(args: argparse.Namespace) -> None:
         cycle_count = 0
         while _running:
             frame = camera.read()
-            if frame is None:
+            frame_roi = camera.read_roi()
+            if frame_roi is None:
                 continue
 
             # Detect objects in the frame
-            detections = detector.detect(frame)
-            target = selector.select(detections)
+            detections_roi = detector.detect(frame_roi)
+            # Need to get full frame bounding boxes 
+            target = selector.select(detections_roi) 
 
             if target is None:
                 # No valid target found, continue to next frame

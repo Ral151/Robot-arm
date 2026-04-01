@@ -21,10 +21,17 @@ class Detection:
     bbox: Tuple[float, float, float, float]
 
     @property
-    def centroid(self) -> Tuple[float, float]:
-        """Return the centre pixel of the bounding box."""
+    def centroid(self, roi: List[int] = None) -> Tuple[float, float]:
+        """Return the centre pixel of the bounding box and convert it into full frame coordinates."""
         x1, y1, x2, y2 = self.bbox
-        return ((x1 + x2) / 2.0, (y1 + y2) / 2.0)
+        cx = (x1 + x2) / 2.0
+        cy = (y1 + y2) / 2.0
+
+        if roi is not None:
+            cx += roi[0]
+            cy += roi[1]
+
+        return (cx, cy)
 
     @property
     def area(self) -> float:
