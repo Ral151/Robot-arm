@@ -13,7 +13,7 @@ Press 'q' to quit.
 import pyrealsense2 as rs
 import numpy as np
 import cv2
-from realsense_utils import (
+from .realsense_utils import (
     initialize_pipeline,
     get_camera_intrinsics,
     get_aligned_frames,

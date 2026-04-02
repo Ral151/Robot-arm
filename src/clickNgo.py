@@ -1,7 +1,5 @@
 
 
-import os
-os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 import argparse, signal, sys, yaml, cv2
 import numpy as np

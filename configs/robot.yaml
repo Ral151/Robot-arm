@@ -1,5 +1,5 @@
 robot:
-  port: COM6
+  port: COM5
   baudrate: 115200
   home_position:
     x: 200.0
@@ -12,12 +12,12 @@ robot:
       y: -100.0
       z: 10.0
       r: 0.0
-    bolt:
+    long_bolt:
       x: 250.0
       y: 0.0
       z: 10.0
       r: 0.0
-    screw:
+    short_bolt:
       x: 250.0
       y: 100.0
       z: 10.0

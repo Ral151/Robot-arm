@@ -1,35 +1,32 @@
-# Hand-eye calibration configuration
-# NOTE: AprilTag is mounted on the GRIPPER (not workspace)
-# This is an eye-to-hand calibration setup
 calibration:
-  # AprilTag settings (tag mounted on gripper)
   apriltag:
     family: tag36h11
-    tag_size: 0.05 # metres (physical tag side length - MEASURE ACCURATELY!)
-    tag_id: 0 # ID of the reference tag (provided by committee)
-
-  # Checkerboard (for camera intrinsic calibration)
+    tag_size: 0.05
+    tag_id: 0
   checkerboard:
     rows: 6
     cols: 9
-    square_size: 0.025 # metres
-
-  # Saved transform matrices (populated after running calibration)
-  # This transforms coordinates from camera frame to robot base frame
+    square_size: 0.025
   camera_to_robot:
-    translation: [0.0, 0.0, 0.0] # [x, y, z] metres (update after calibration!)
+    translation:
+    - 258.28281694022854
+    - 198.43072657282713
+    - 557.5003959390319
     rotation_matrix:
-      - [1.0, 0.0, 0.0]
-      - [0.0, 1.0, 0.0]
-      - [0.0, 0.0, 1.0]
-
-  # Fixed bin depth for competition (container plate)
+    - - -0.24582648364777288
+      - 0.9260206080175916
+      - -0.2864527421130765
+    - - 0.9479478137963006
+      - 0.2913762588248919
+      - 0.12843215373115935
+    - - 0.20239634941417667
+      - -0.23997022590300524
+      - -0.9494472120259636
   bin_depth:
-    source_bin_z: 10.0 # mm - Depth of source container (MEASURE ACTUAL BIN!)
-    object_heights: # Typical heights for Z-adjustment
-      nut: 5.0 # mm
-      bolt: 8.0 # mm
-      screw: 8.0 # mm
-
+    source_bin_z: 10.0
+    object_heights:
+      nut: 5.0
+      short_bolt: 8.0
+      long_bolt: 10.0
   calibration_images_path: data/calibration_images/
   output_path: configs/calibration.yaml

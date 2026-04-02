@@ -9,33 +9,26 @@ Robot Arm Challenge Workflow:
 5. Sort nuts, bolts, and screws into designated bins.
 """
 
+import os
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 import argparse
 import signal
 import sys
 from typing import Dict
 
 import yaml
+import numpy as np
 
-from src.camera.camera_stream import CameraStream
-import calibration.calibration_matrices
-from calibration.transforms import load_calibration,calc_calibration,update_calib_yaml
+from camera.camera_stream import CameraStream
+from calibration.transforms import calc_calibration, update_calib_yaml
 from calibration.apriltag_detection import get_apriltag_object
-from .Dobot.Dobot_movement import DobotController
-from Dobot.ports import check_port,get_dobot_port
-import camera.rs_demo as rs
-from pydobotplus import Dobot
+from Dobot.Dobot_movement import DobotController
 from vision.detector import Detector
 from vision.target_selector import TargetSelector
 from utils.logger import get_logger
 from camera.rs_demo.realsense_pixel_to_3d import pixel_to_homogeneous_point
-from camera.rs_demo.realsense_utils import (
-    initialize_pipeline,
-    get_camera_intrinsics,
-    get_aligned_frames,
-    frames_to_numpy,
-    pixel_to_3d,
-    print_camera_info
-)
+from camera.rs_demo.realsense_utils import get_aligned_frames
 
 
 logger = get_logger(__name__)
@@ -66,12 +59,7 @@ def main(args: argparse.Namespace) -> None:
     logger.info("Loading configurations …")
     robot_cfg = load_config(args.robot_config) #Robot settings
     camera_cfg = load_config(args.camera_config) #Camera Settings
-    classes_cfg = load_config(args.classes_config) 
-    
-    #Get calibration matrix
-    base_T_cam = calc_calibration()
-    #Upload Calibration data to yaml FILE
-    update_calib_yaml(base_T_cam)
+    classes_cfg = load_config(args.classes_config)
 
     #=====================================================
     # 2) START & PREPARE DEVICES
@@ -79,15 +67,20 @@ def main(args: argparse.Namespace) -> None:
     #Start Camera
     logger.info("Initialising camera …")
     camera = CameraStream(camera_cfg)
+    camera.start()
     intrinsics = camera.get_intrinsics()
     pipeline = camera.get_pipeline()
     align = camera.get_align()
-    camera.start()
 
     #Start Robot
     logger.info("Initialising robot …")
     robot = DobotController(robot_cfg) # By this point, we will have a Dobot device "robot.device" with DobotController object "robot"
     robot.home()  
+
+    # Get apriltag
+    apriltag = get_apriltag_object(pipeline, align, intrinsics)
+    # Get calibration matrix
+    base_T_cam = calc_calibration(robot._device,apriltag)
 
     #Preparing YOLO AI Model
     logger.info("Loading YOLO detector …")
@@ -134,21 +127,24 @@ def main(args: argparse.Namespace) -> None:
             # Get aligned frames
             color_frame, depth_frame = get_aligned_frames(pipeline,align)
             # Convert center target_centroid to 3D realsense coordinates using depth information before do the transformation to robot coordinates
-            P_camera = pixel_to_homogeneous_point(intrinsics,target_centroid[0],target_centroid[1],depth_frame)
+            px = int(round(target_centroid[0]))
+            py = int(round(target_centroid[1]))
+            P_camera = pixel_to_homogeneous_point(intrinsics, px, py, depth_frame)
+            if P_camera is None:
+                continue
             X, Y, Z = P_camera[0,0], P_camera[1,0], P_camera[2,0]
 
             # Convert to millimeters for easier reading
             X_mm, Y_mm, Z_mm = X * 1000, Y * 1000, Z * 1000
             P_camera = np.array([[X_mm],[Y_mm],[Z_mm],[1.0]], dtype=np.float64)
             
-            # Detect Apriltag
-            apriltag = get_apriltag_object(pipeline,align,intrinsics)
-            
-            # Get base_T_cam matrix
-            base_T_cam = calc_calibration(robot,apriltag)
-            
             # Calculate P_dobot
             P_dobot = base_T_cam @ P_camera
+            robot_coords = {
+                "x": float(P_dobot[0][0]),
+                "y": float(P_dobot[1][0]),
+                "z": float(P_dobot[2][0]),
+            }
             
             # Determine target bin based on object class
             target_label = target.label.lower()
@@ -159,7 +155,7 @@ def main(args: argparse.Namespace) -> None:
                 try:
                     """Need to consider the real frame bounding boxes to determine the size of the object and adjust the gripper
                     accordingly. Ie. if the bounding boxes create a 90 degree angle, the gripper should rotate to match that angle."""
-                    robot.pick(P_dobot)
+                    robot.pick(robot_coords)
                     robot.place(target_bin)
                     
                     # Update statistics
@@ -204,5 +200,5 @@ if __name__ == "__main__":
     parser.add_argument("--camera-config", default="configs/camera.yaml")
     parser.add_argument("--calibration-config", default="configs/calibration.yaml")
     parser.add_argument("--classes-config", default="configs/classes.yaml")
-    parser.add_argument("--model", default="models/yolo/best.pt")
+    parser.add_argument("--model", default="bestV2.pt")
     main(parser.parse_args())
