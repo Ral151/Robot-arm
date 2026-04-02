@@ -31,7 +31,6 @@ class Detection:
         if roi is not None:
             cx += roi[0]
             cy += roi[1]
-
         return (cx, cy)
 
     @property

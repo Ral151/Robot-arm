@@ -82,6 +82,7 @@ class CameraStream:
                 color_img = np.asanyarray(color_frame.get_data())
                 depth_img = np.asanyarray(depth_frame.get_data())
                 roi = color_img[roi_y1:roi_y2, roi_x1:roi_x2]
+                depth_roi = depth_img[roi_y1:roi_y2, roi_x1:roi_x2]
                 display_roi = roi.copy()
                 color_full_roi = cv2.rectangle(color_img.copy(),(roi_x1, roi_y1),(roi_x2, roi_y2),(255, 0, 0),2,)
 
@@ -90,6 +91,7 @@ class CameraStream:
                     depth_img = np.fliplr(depth_img)
 
                 with self._lock:
+                    self._depth_roi = depth_roi
                     self._color_frame = color_full_roi
                     self._depth_frame = depth_img
                     self._roi_frame = display_roi
@@ -103,6 +105,10 @@ class CameraStream:
         with self._lock:
             return self._depth_frame.copy() if self._depth_frame is not None else None
     
+    def read_depth_roi(self) -> Optional[np.ndarray]:
+        """Return the latest depth frame in ROI."""
+        with self._lock:
+            return self._depth_roi.copy() if self._depth_roi is not None else None
     def read_roi(self) -> Optional[np.ndarray]:
         """Return the latest ROI color frame."""
         with self._lock:

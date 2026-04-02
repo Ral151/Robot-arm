@@ -124,6 +124,7 @@ def main(args: argparse.Namespace) -> None:
             # Convert pixel coordinates to robot coordinates using real frame coordinates
             roi = camera.get_roi()
             target_centroid = target.centroid(roi)
+            # Convert center target_centroid to 3D realsense coordinates using depth information before do the transformation to robot coordinates
             robot_coords = transform.image_to_robot(target_centroid)
             logger.info(f"  Image {target_centroid} → Robot {robot_coords}")
             
