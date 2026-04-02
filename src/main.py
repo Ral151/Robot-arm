@@ -19,7 +19,7 @@ import yaml
 from camera.camera_stream import CameraStream
 import calibration.calibration_matrices
 from calibration.transforms import load_calibration,calc_calibration,update_calib_yaml
-from Dobot.Dobot_movement import DobotController
+from src.Dobot.temporary.Dobot_movement import DobotController
 from Dobot.ports import check_port,get_dobot_port
 import camera.rs_demo as rs
 from pydobotplus import Dobot
