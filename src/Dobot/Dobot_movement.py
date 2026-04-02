@@ -41,17 +41,17 @@ class DobotController:
         else:
             logger.info("Simulation mode: Dobot not connected.")
 
-    def home(self) -> None:
+    def home_to_position(self) -> None:
         """Move the arm to the configured home position."""
         h = self._home
-        self.move_to(h["x"], h["y"], h["z"], h.get("r", 0.0))
+        self.move_to(h["x"], h["y"], h["z"], h.get("r", 0.0),True)
         logger.info("Moved to home position.")
 
-    def move_to(self, x: float, y: float, z: float, r: float = 0.0) -> None:
+    def move_to(self, x: float, y: float, z: float, r: float = 0.0, wait=True) -> None:
         """Move the end-effector to (x, y, z, r) in robot coordinates (mm)."""
         logger.debug(f"move_to({x:.1f}, {y:.1f}, {z:.1f}, {r:.1f})")
         if self._device is not None:
-            self._device.move_to(x, y, z, r, wait=True)
+            self._device.move_to(x, y, z, r, wait)
 
     def set_gripper(self, close: bool) -> None:
         """Open or close the gripper.
@@ -74,14 +74,14 @@ class DobotController:
         self.set_gripper(False)
         time.sleep(self._gripper_open_delay)
         # Move above target
-        self.move_to(x, y, z + 30, r)
+        self.move_to(x, y, z + 30, r, wait=True)
         # Lower to target
-        self.move_to(x, y, z, r)
+        self.move_to(x, y, z, r,wait=True)
         # Close gripper to grab
         self.set_gripper(True)
         time.sleep(self._gripper_close_delay)
         # Lift
-        self.move_to(x, y, z + 30, r)
+        self.move_to(x, y, z + 30, r,wait=True)
         logger.info(f"Picked object at ({x:.1f}, {y:.1f}, {z:.1f})")
 
     def place(self, coords: Dict[str, float]) -> None:
@@ -89,12 +89,12 @@ class DobotController:
         import time
         x, y, z = coords["x"], coords["y"], coords["z"]
         r = coords.get("r", 0.0)
-        self.move_to(x, y, z + 30, r)
-        self.move_to(x, y, z, r)
+        self.move_to(x, y, z + 30, r, wait=True)
+        self.move_to(x, y, z, r, wait=True)
         # Open gripper to release
         self.set_gripper(False)
         time.sleep(self._gripper_open_delay)
-        self.move_to(x, y, z + 30, r)
+        self.move_to(x, y, z + 30, r, wait=True)
         logger.info(f"Placed object at ({x:.1f}, {y:.1f}, {z:.1f})")
 
     def disconnect(self) -> None:

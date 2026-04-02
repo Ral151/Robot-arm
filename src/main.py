@@ -75,7 +75,7 @@ def main(args: argparse.Namespace) -> None:
     #Start Robot
     logger.info("Initialising robot …")
     robot = DobotController(robot_cfg) # By this point, we will have a Dobot device "robot.device" with DobotController object "robot"
-    robot.home()  
+    robot.home_to_position()  
 
     # Get apriltag
     apriltag = get_apriltag_object(pipeline, align, intrinsics)
@@ -167,7 +167,7 @@ def main(args: argparse.Namespace) -> None:
                 except Exception as e:
                     logger.error(f"  ✗ Failed to sort {target_label}: {e}")
                     stats["failed"] += 1
-                    robot.home()  # Return to safe position
+                    robot.home_to_position()  # Return to safe position
             else:
                 logger.warning(f"  Unknown object class '{target_label}' - skipping")
                 stats["failed"] += 1
@@ -178,7 +178,7 @@ def main(args: argparse.Namespace) -> None:
         logger.error(f"Unexpected error: {e}")
     finally:
         camera.stop()
-        robot.home()  # Return to home before disconnecting
+        robot.home_to_position()  # Return to home_to_position before disconnecting
         robot.disconnect()
         
         # Print final statistics
