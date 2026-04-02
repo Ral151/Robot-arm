@@ -92,7 +92,7 @@ def main(args: argparse.Namespace) -> None:
     logger.info(f"Sorting bins configured: {list(sorting_bins.keys())}")
     
     # Statistics tracking
-    stats: Dict[str, int] = {"nut": 0, "bolt": 0, "screw": 0, "total": 0, "failed": 0}
+    stats: Dict[str, int] = {"nut": 0, "long_bolt": 0, "short_bolt": 0, "total": 0, "failed": 0}
     
     #=====================================================
     # 3) START LOOP
@@ -144,7 +144,7 @@ def main(args: argparse.Namespace) -> None:
                     stats[target_label] += 1
                     stats["total"] += 1
                     logger.info(f"  ✓ Sorted {target_label} to bin #{stats[target_label]}")
-                    logger.info(f"  Total sorted: {stats['total']} (nuts={stats['nut']}, bolts={stats['bolt']}, screws={stats['screw']})")
+                    # logger.info(f"  Total sorted: {stats['total']} (nuts={stats['nut']}, bolts={stats['long_bolt']}, screws={stats['short_bolt']})")
                     
                 except Exception as e:
                     logger.error(f"  ✗ Failed to sort {target_label}: {e}")
@@ -168,8 +168,8 @@ def main(args: argparse.Namespace) -> None:
         logger.info("=== FINAL RESULTS ===")
         logger.info(f"Total items sorted: {stats['total']}")
         logger.info(f"  Nuts:   {stats['nut']}")
-        logger.info(f"  Bolts:  {stats['bolt']}")
-        logger.info(f"  Screws: {stats['screw']}")
+        # logger.info(f"  Bolts:  {stats['long_bolt']}")
+        # logger.info(f"  Screws: {stats['short_bolt']}")
         logger.info(f"Failed attempts: {stats['failed']}")
         logger.info(f"Success rate: {(stats['total']/(stats['total']+stats['failed'])*100) if (stats['total']+stats['failed']) > 0 else 0:.1f}%")
         logger.info("="*50)
