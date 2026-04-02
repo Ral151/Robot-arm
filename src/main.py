@@ -16,16 +16,27 @@ from typing import Dict
 
 import yaml
 
-from camera.camera_stream import CameraStream
+from src.camera.camera_stream import CameraStream
 import calibration.calibration_matrices
 from calibration.transforms import load_calibration,calc_calibration,update_calib_yaml
-from src.Dobot.temporary.Dobot_movement import DobotController
+from calibration.apriltag_detection import get_apriltag_object
+from .Dobot.Dobot_movement import DobotController
 from Dobot.ports import check_port,get_dobot_port
 import camera.rs_demo as rs
 from pydobotplus import Dobot
 from vision.detector import Detector
 from vision.target_selector import TargetSelector
 from utils.logger import get_logger
+from camera.rs_demo.realsense_pixel_to_3d import pixel_to_homogeneous_point
+from camera.rs_demo.realsense_utils import (
+    initialize_pipeline,
+    get_camera_intrinsics,
+    get_aligned_frames,
+    frames_to_numpy,
+    pixel_to_3d,
+    print_camera_info
+)
+
 
 logger = get_logger(__name__)
 
@@ -60,9 +71,7 @@ def main(args: argparse.Namespace) -> None:
     #Get calibration matrix
     base_T_cam = calc_calibration()
     #Upload Calibration data to yaml FILE
-    update_calib_yaml(base_T_cam, args.calibration_config)
-    calib_cfg = load_config(args.calibration_config) # Calibration Data
-    
+    update_calib_yaml(base_T_cam)
 
     #=====================================================
     # 2) START & PREPARE DEVICES
@@ -70,17 +79,15 @@ def main(args: argparse.Namespace) -> None:
     #Start Camera
     logger.info("Initialising camera …")
     camera = CameraStream(camera_cfg)
+    intrinsics = camera.get_intrinsics()
+    pipeline = camera.get_pipeline()
+    align = camera.get_align()
     camera.start()
 
     #Start Robot
     logger.info("Initialising robot …")
-    device_port = check_port()
-    robot  = DobotController(robot_cfg)
+    robot = DobotController(robot_cfg) # By this point, we will have a Dobot device "robot.device" with DobotController object "robot"
     robot.home()  
-
-    #Preparing Calibration Data
-    logger.info("Loading calibration …")
-    transform = load_calibration(calib_cfg)
 
     #Preparing YOLO AI Model
     logger.info("Loading YOLO detector …")
@@ -124,9 +131,24 @@ def main(args: argparse.Namespace) -> None:
             # Convert pixel coordinates to robot coordinates using real frame coordinates
             roi = camera.get_roi()
             target_centroid = target.centroid(roi)
+            # Get aligned frames
+            color_frame, depth_frame = get_aligned_frames(pipeline,align)
             # Convert center target_centroid to 3D realsense coordinates using depth information before do the transformation to robot coordinates
-            robot_coords = transform.image_to_robot(target_centroid)
-            logger.info(f"  Image {target_centroid} → Robot {robot_coords}")
+            P_camera = pixel_to_homogeneous_point(intrinsics,target_centroid[0],target_centroid[1],depth_frame)
+            X, Y, Z = P_camera[0,0], P_camera[1,0], P_camera[2,0]
+
+            # Convert to millimeters for easier reading
+            X_mm, Y_mm, Z_mm = X * 1000, Y * 1000, Z * 1000
+            P_camera = np.array([[X_mm],[Y_mm],[Z_mm],[1.0]], dtype=np.float64)
+            
+            # Detect Apriltag
+            apriltag = get_apriltag_object(pipeline,align,intrinsics)
+            
+            # Get base_T_cam matrix
+            base_T_cam = calc_calibration(robot,apriltag)
+            
+            # Calculate P_dobot
+            P_dobot = base_T_cam @ P_camera
             
             # Determine target bin based on object class
             target_label = target.label.lower()
@@ -137,7 +159,7 @@ def main(args: argparse.Namespace) -> None:
                 try:
                     """Need to consider the real frame bounding boxes to determine the size of the object and adjust the gripper
                     accordingly. Ie. if the bounding boxes create a 90 degree angle, the gripper should rotate to match that angle."""
-                    robot.pick(robot_coords)
+                    robot.pick(P_dobot)
                     robot.place(target_bin)
                     
                     # Update statistics

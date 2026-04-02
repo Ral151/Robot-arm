@@ -121,6 +121,12 @@ class CameraStream:
     def get_intrinsics(self) -> Optional[rs.intrinsics]:
         """Return camera intrinsics (fx, fy, cx, cy, coeffs)."""
         return self._intrinsics
+    
+    def get_pipeline(self):
+        return self._pipeline
+    
+    def get_align(self):
+        return self._align
 
     def stop(self) -> None:
         """Stop the capture thread and release the camera resource."""

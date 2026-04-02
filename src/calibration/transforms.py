@@ -32,10 +32,22 @@ def update_calib_yaml(base_T_cam):
     rotation = base_T_cam[:3,:3]
     translation_list = translation.tolist()
     rotation_list = rotation.tolist()
-    with open("../../configs/calibration", "r") as f:
+    with open("../../configs/calibration.ymal", "r") as f:
         data = yaml.safe_load(f)
         data["calibration"]["camera_to_robot"]["translation"] = translation_list
         data["calibration"]["camera_to_robot"]["rotation"] = rotation_list
+        
+def load_calib_yaml():
+    with open("../../configs/calibration.yaml", "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    translation = np.array(data["calibration"]["camera_to_robot"]["translation"], dtype=float)
+    rotation = np.array(data["calibration"]["camera_to_robot"]["rotation_matrix"], dtype=float)
+
+    base_T_cam = np.eye(4, dtype=float)
+    base_T_cam[:3, :3] = rotation
+    base_T_cam[:3, 3] = translation
+    return base_T_cam
 
 def get_target_coords(base_T_cam,P_camera):
     rotation = base_T_cam[:3,:3]
