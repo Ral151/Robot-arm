@@ -13,6 +13,7 @@ import os
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 import argparse
+import time
 import signal
 import sys
 from typing import Dict
@@ -132,6 +133,21 @@ def main(args: argparse.Namespace) -> None:
                 cv2.putText(display_roi, label, (x1, max(y1 - 6, 0)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
+                # Draw center pixel on full frame and show its coordinates.
+                cx, cy = det.centroid(roi)
+                center_pt = (int(round(cx)), int(round(cy)))
+                cv2.circle(display_frame, center_pt, 4, (0, 255, 255), -1)
+                coord_text = f"({center_pt[0]}, {center_pt[1]})"
+                cv2.putText(
+                    display_frame,
+                    coord_text,
+                    (center_pt[0] + 6, max(center_pt[1] - 6, 0)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.45,
+                    (0, 255, 255),
+                    1,
+                )
+
             cv2.imshow(window_name, display_frame)
             cv2.imshow(roi_window_name, display_roi)
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -181,6 +197,7 @@ def main(args: argparse.Namespace) -> None:
                     """Need to consider the real frame bounding boxes to determine the size of the object and adjust the gripper
                     accordingly. Ie. if the bounding boxes create a 90 degree angle, the gripper should rotate to match that angle."""
                     robot.pick(robot_coords)
+                    time.sleep(1)
                     robot.place(target_bin)
                     
                     # Update statistics
@@ -211,7 +228,7 @@ def main(args: argparse.Namespace) -> None:
         logger.info("="*50)
         logger.info("=== FINAL RESULTS ===")
         logger.info(f"Total items sorted: {stats['total']}")
-        logger.info(f"  Nuts:   {stats['nut']}")
+        # logger.info(f"  Nuts:   {stats['nut']}")
         # logger.info(f"  Bolts:  {stats['long_bolt']}")
         # logger.info(f"  Screws: {stats['short_bolt']}")
         logger.info(f"Failed attempts: {stats['failed']}")

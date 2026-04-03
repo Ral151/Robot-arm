@@ -1,8 +1,8 @@
 # Object classes for YOLO detection - Robot Arm Challenge
 # Format: id: name
 classes:
-  0: nut
-  1: long_bolt
+  0: long_bolt
+  1: nut
   2: short_bolt
 
 # Detection thresholds per class (optional overrides)

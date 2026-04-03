@@ -23,7 +23,7 @@ class DobotController:
         self._home: Dict[str, float] = robot_cfg.get(
             "home_position", {"x": 200.0, "y": 0.0, "z": 50.0, "r": 0.0}
         )
-        self._gripper_close_delay: float = robot_cfg.get("gripper", {}).get("close_delay", 0.5)
+        self._gripper_close_delay: float = robot_cfg.get("gripper", {}).get("close_delay", 2)
         self._gripper_open_delay: float = robot_cfg.get("gripper", {}).get("open_delay", 0.3)
         self._gripper_close_value: int = robot_cfg.get("gripper", {}).get("close_value", 480)
         self._gripper_open_value: int = robot_cfg.get("gripper", {}).get("open_value", 200)
@@ -62,7 +62,7 @@ class DobotController:
         if self._device is not None:
             # Dobot gripper control: higher value = more closed
             value = self._gripper_close_value if close else self._gripper_open_value
-            self._device.grip(value)
+            self._device.grip(close)
             logger.debug(f"Gripper {'closed' if close else 'opened'} (value={value})")
 
     def pick(self, coords: Dict[str, float]) -> None:
@@ -72,14 +72,14 @@ class DobotController:
         r = coords.get("r", 0.0)
         # Open gripper before approaching
         self.set_gripper(False)
-        time.sleep(self._gripper_open_delay)
+        time.sleep(1)
         # Move above target
         self.move_to(x, y, z + 30, r, wait=True)
         # Lower to target
-        self.move_to(x, y, z, r,wait=True)
+        self.move_to(x, y, z - 19, r,wait=True)
         # Close gripper to grab
         self.set_gripper(True)
-        time.sleep(self._gripper_close_delay)
+        time.sleep(1.5)  # Wait for gripper to close securely
         # Lift
         self.move_to(x, y, z + 30, r,wait=True)
         logger.info(f"Picked object at ({x:.1f}, {y:.1f}, {z:.1f})")
@@ -93,7 +93,7 @@ class DobotController:
         self.move_to(x, y, z, r, wait=True)
         # Open gripper to release
         self.set_gripper(False)
-        time.sleep(self._gripper_open_delay)
+        time.sleep(1.5)
         self.move_to(x, y, z + 30, r, wait=True)
         logger.info(f"Placed object at ({x:.1f}, {y:.1f}, {z:.1f})")
 
