@@ -109,6 +109,7 @@ def main(args: argparse.Namespace) -> None:
     try:
         cycle_count = 0
         while _running:
+            robot.home_to_position()  # Ensure we start from a known position each cycle
             frame = camera.read()
             frame_roi = camera.read_roi()
             if frame is None or frame_roi is None:
