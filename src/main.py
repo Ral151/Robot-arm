@@ -19,6 +19,7 @@ from typing import Dict
 
 import yaml
 import numpy as np
+import cv2
 
 from camera.camera_stream import CameraStream
 from calibration.transforms import calc_calibration, update_calib_yaml
@@ -101,17 +102,42 @@ def main(args: argparse.Namespace) -> None:
     logger.info("Starting continuous sorting loop.")
     logger.info("System will run until Ctrl+C or time limit.")
     logger.info("="*50)
+    window_name = "RealSense View"
+    roi_window_name = "ROI View"
     
     try:
         cycle_count = 0
         while _running:
             frame = camera.read()
             frame_roi = camera.read_roi()
-            if frame_roi is None:
+            if frame is None or frame_roi is None:
                 continue
 
             # Detect objects in the ROI frame
             detections_roi = detector.detect(frame_roi)
+            roi = camera.get_roi()
+            roi_x1, roi_y1, _, _ = roi
+            display_frame = frame.copy()
+            display_roi = frame_roi.copy()
+
+            for det in detections_roi:
+                x1, y1, x2, y2 = det.bbox
+                pt1 = (roi_x1 + x1, roi_y1 + y1)
+                pt2 = (roi_x1 + x2, roi_y1 + y2)
+                cv2.rectangle(display_frame, pt1, pt2, (0, 255, 0), 2)
+                cv2.rectangle(display_roi, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                label = f"{det.label} {det.confidence:.2f}"
+                cv2.putText(display_frame, label, (pt1[0], max(pt1[1] - 6, 0)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+                cv2.putText(display_roi, label, (x1, max(y1 - 6, 0)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+            cv2.imshow(window_name, display_frame)
+            cv2.imshow(roi_window_name, display_roi)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                _running = False
+                break
+
             target = selector.select(detections_roi)
 
             if target is None:
@@ -122,7 +148,6 @@ def main(args: argparse.Namespace) -> None:
             logger.info(f"[Cycle {cycle_count}] Detected: {target.label} (conf={target.confidence:.2f})")
             
             # Convert pixel coordinates to robot coordinates using real frame coordinates
-            roi = camera.get_roi()
             target_centroid = target.centroid(roi)
             # Get aligned frames
             color_frame, depth_frame = get_aligned_frames(pipeline,align)
@@ -177,6 +202,7 @@ def main(args: argparse.Namespace) -> None:
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
     finally:
+        cv2.destroyAllWindows()
         camera.stop()
         robot.home_to_position()  # Return to home_to_position before disconnecting
         robot.disconnect()

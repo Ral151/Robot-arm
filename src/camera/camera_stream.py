@@ -3,6 +3,15 @@ from typing import Optional
 import cv2
 import numpy as np
 
+from camera.rs_demo.realsense_utils import (
+    initialize_pipeline,
+    get_camera_intrinsics,
+    get_aligned_frames,
+    frames_to_numpy,
+    pixel_to_3d,
+    print_camera_info
+)
+
 try:
     import pyrealsense2 as rs
     HAS_REALSENSE = True
@@ -18,14 +27,13 @@ class CameraStream:
         self._width: int = cam_cfg.get("width", 640)
         self._height: int = cam_cfg.get("height", 480)
         self._fps: int = cam_cfg.get("fps", 30)
-        self._flip: bool = cam_cfg.get("flip", False)
         self._camera_serial: Optional[str] = cam_cfg.get("serial", 0)
         roi_cfg = cam_cfg.get("roi", {})
         self._roi = [
-            roi_cfg.get("x1", 325),
-            roi_cfg.get("y1", 201),
-            roi_cfg.get("x2", 556),
-            roi_cfg.get("y2", 413),
+            roi_cfg.get("x1", 348),
+            roi_cfg.get("y1", 217),
+            roi_cfg.get("x2", 545),
+            roi_cfg.get("y2", 423),
         ]
 
         # RealSense pipeline
@@ -45,23 +53,13 @@ class CameraStream:
         if not HAS_REALSENSE:
             raise RuntimeError("pyrealsense2 not installed. Install via: pip install pyrealsense2")
 
-        self._pipeline = rs.pipeline()
-        config = rs.config()
-
-        if self._camera_serial:
-            config.enable_device(self._camera_serial)
-
-        config.enable_stream(rs.stream.color, self._width, self._height, rs.format.bgr8, self._fps)
-        config.enable_stream(rs.stream.depth, self._width, self._height, rs.format.z16, self._fps)
-
-        profile = self._pipeline.start(config)
-
-        # Align depth to color frame
+        self._pipeline, profile, _ = initialize_pipeline(
+            width=self._width,
+            height=self._height,
+            fps=self._fps,
+        )
+        self._intrinsics = get_camera_intrinsics(profile)
         self._align = rs.align(rs.stream.color)
-
-        # Extract color intrinsics
-        color_stream = profile.get_stream(rs.stream.color).as_video_stream_profile()
-        self._intrinsics = color_stream.get_intrinsics()
 
         self._running = True
         self._thread = threading.Thread(target=self._capture_loop, daemon=True)
@@ -72,23 +70,14 @@ class CameraStream:
         roi_x1, roi_y1, roi_x2, roi_y2 = self._roi
 
         while self._running:
-            frames = self._pipeline.wait_for_frames()
-            aligned_frames = self._align.process(frames)
+            color_frame, depth_frame = get_aligned_frames(self._pipeline, self._align)
 
-            color_frame = aligned_frames.get_color_frame()
-            depth_frame = aligned_frames.get_depth_frame()
-
-            if color_frame and depth_frame:
-                color_img = np.asanyarray(color_frame.get_data())
-                depth_img = np.asanyarray(depth_frame.get_data())
+            if color_frame is not None and depth_frame is not None:
+                color_img, depth_img = frames_to_numpy(color_frame, depth_frame)
                 roi = color_img[roi_y1:roi_y2, roi_x1:roi_x2]
                 depth_roi = depth_img[roi_y1:roi_y2, roi_x1:roi_x2]
                 display_roi = roi.copy()
                 color_full_roi = cv2.rectangle(color_img.copy(),(roi_x1, roi_y1),(roi_x2, roi_y2),(255, 0, 0),2,)
-
-                if self._flip:
-                    color_img = np.fliplr(color_img)
-                    depth_img = np.fliplr(depth_img)
 
                 with self._lock:
                     self._depth_roi = depth_roi
