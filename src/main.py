@@ -195,8 +195,10 @@ def main(args: argparse.Namespace) -> None:
                 
                 # Execute pick and place
                 try:
-                    """Need to consider the real frame bounding boxes to determine the size of the object and adjust the gripper
-                    accordingly. Ie. if the bounding boxes create a 90 degree angle, the gripper should rotate to match that angle."""
+                    # Compute object orientation from bounding box in full-frame coordinates
+                    bbox_angle_deg = target.get_bbox_angle()
+                    arm_theta = robot.get_gripper_orientation()
+                    robot_coords["r"] = bbox_angle_deg - arm_theta if arm_theta is not None else 0.0
                     robot.pick(robot_coords)
                     time.sleep(1)
                     robot.place(target_bin)
