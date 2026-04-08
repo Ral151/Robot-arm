@@ -21,6 +21,8 @@ from matplotlib.animation import FuncAnimation
 from scipy.spatial.transform import Rotation as R
 
 def calc_calibration(device: Dobot,apriltag):
+    if device is None:
+        raise RuntimeError("Dobot device is not connected. Cannot compute calibration.")
     dobot_T_gripper = get_dobot_to_gripper_matrix(device.get_pose())
     gripper_T_tag = get_gripper_to_tag_matrix()
     tag_T_camera = np.linalg.inv(get_tag_to_camera_matrix(apriltag))

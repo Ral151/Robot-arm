@@ -37,7 +37,9 @@ class Detection:
     def area(self) -> float:
         """Return the bounding-box area in pixels²."""
         x1, y1, x2, y2 = self.bbox
-        return max(0.0, x2 - x1) * max(0.0, y2 - y1)
+        dx = x2-x1
+        dy = y2-y1
+        return abs(dx) * abs(dy)
 
 
 def non_max_suppression(detections: List[Detection], iou_threshold: float = 0.5) -> List[Detection]:

@@ -30,10 +30,14 @@ class CameraStream:
         self._camera_serial: Optional[str] = cam_cfg.get("serial", 0)
         roi_cfg = cam_cfg.get("roi", {})
         self._roi = [
-            roi_cfg.get("x1", 348),
-            roi_cfg.get("y1", 217),
-            roi_cfg.get("x2", 545),
-            roi_cfg.get("y2", 423),
+            # roi_cfg.get("x1", 348),
+            # roi_cfg.get("y1", 217),
+            # roi_cfg.get("x2", 545),
+            # roi_cfg.get("y2", 423),
+            roi_cfg.get("x1", 318),
+            roi_cfg.get("y1", 241),
+            roi_cfg.get("x2", 546),
+            roi_cfg.get("y2", 424),
         ]
 
         # RealSense pipeline

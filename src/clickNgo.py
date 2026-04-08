@@ -168,9 +168,9 @@ class RealSense3DConverter:
                         print(f"\n{'='*60}")
                         print(f"Pixel: ({x}, {y})")
                         print(f"3D Point in Camera Frame:")
-                        print(f"  X = {X_mm:7.1f} mm")
-                        print(f"  Y = {Y_mm:7.1f} mm")
-                        print(f"  Z = {Z_mm:7.1f} mm (depth)")
+                        print(f"  X = {X:7.1f} mm")
+                        print(f"  Y = {Y:7.1f} mm")
+                        print(f"  Z = {Z:7.1f} mm (depth)")
                         print(f"  Distance: {np.sqrt(X**2 + Y**2 + Z**2)*1000:.1f} mm")
                         print(f"P_camera (4x1):\n{P_camera}")
                         print(f"{'='*60}")
@@ -216,7 +216,7 @@ class RealSense3DConverter:
                 # Show image
                 cv2.imshow(window_name, color_image)
                 
-                self.clicked_point = None
+                # self.clicked_point = None
                 
                 # Handle key press
                 key = cv2.waitKey(1) & 0xFF

@@ -77,7 +77,10 @@ def main(args: argparse.Namespace) -> None:
     #Start Robot
     logger.info("Initialising robot …")
     robot = DobotController(robot_cfg) # By this point, we will have a Dobot device "robot.device" with DobotController object "robot"
-    robot.home_to_position()  
+    if robot._device is None:
+        logger.error("Dobot not connected. Check port, power, and drivers before calibration.")
+        return
+    robot.home_to_position()
 
     # Get apriltag
     apriltag = get_apriltag_object(pipeline, align, intrinsics)
@@ -109,7 +112,7 @@ def main(args: argparse.Namespace) -> None:
     try:
         cycle_count = 0
         while _running:
-            robot.home_to_position()  # Ensure we start from a known position each cycle
+            # robot.home_to_position()  # Ensure we start from a known position each cycle
             frame = camera.read()
             frame_roi = camera.read_roi()
             if frame is None or frame_roi is None:
@@ -180,6 +183,7 @@ def main(args: argparse.Namespace) -> None:
             X_mm, Y_mm, Z_mm = X * 1000, Y * 1000, Z * 1000
             P_camera = np.array([[X_mm],[Y_mm],[Z_mm],[1.0]], dtype=np.float64)
             
+            
             # Calculate P_dobot
             P_dobot = base_T_cam @ P_camera
             robot_coords = {
@@ -187,7 +191,7 @@ def main(args: argparse.Namespace) -> None:
                 "y": float(P_dobot[1][0]),
                 "z": float(P_dobot[2][0]),
             }
-            
+
             # Determine target bin based on object class
             target_label = target.label.lower()
             if target_label in sorting_bins:

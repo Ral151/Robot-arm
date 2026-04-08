@@ -23,7 +23,7 @@ from .realsense_utils import (
 )
 
 
-def pixel_to_homogeneous_point(intrinsics, x: int, y: int, depth_frame):
+def pixel_to_homogeneous_point(intrinsics, x, y, depth_frame):
     """
     Convert a pixel (x, y) and its depth into a 4x1 homogeneous column
     vector in the camera frame, ready for matrix multiplication.

@@ -74,14 +74,15 @@ class DobotController:
         self.set_gripper(False)
         time.sleep(1)
         # Move above target
-        self.move_to(x, y, z + 30, r, wait=True)
+        self.move_to(x, y, 30, r, wait=True)
         # Lower to target
-        self.move_to(x, y, z - 19, r,wait=True)
+        z_down = float(-32.5)
+        self.move_to(x, y, z_down, r,wait=True)
         # Close gripper to grab
         self.set_gripper(True)
         time.sleep(1.5)  # Wait for gripper to close securely
         # Lift
-        self.move_to(x, y, z + 30, r,wait=True)
+        self.move_to(x, y, 50, r,wait=True)
         logger.info(f"Picked object at ({x:.1f}, {y:.1f}, {z:.1f})")
 
     def place(self, coords: Dict[str, float]) -> None:
@@ -89,15 +90,18 @@ class DobotController:
         import time
         x, y, z = coords["x"], coords["y"], coords["z"]
         r = coords.get("r", 0.0)
-        self.move_to(x, y, z + 30, r, wait=True)
-        self.move_to(x, y, z, r, wait=True)
+        self.move_to(x, y, 30, r, wait=True)
+        # self.move_to(x, y, z, r, wait=True)
         # Open gripper to release
         self.set_gripper(False)
         time.sleep(1.5)
-        self.move_to(x, y, z + 30, r, wait=True)
+        # self.move_to(x, y, z + 30, r, wait=True)
         logger.info(f"Placed object at ({x:.1f}, {y:.1f}, {z:.1f})")
 
     def disconnect(self) -> None:
         if self._device is not None:
             self._device.close()
             logger.info("Dobot disconnected.")
+    
+    def home(self) -> None:
+        Dobot.home(self._device)
