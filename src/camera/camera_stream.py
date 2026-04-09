@@ -45,6 +45,7 @@ class CameraStream:
         self._align: Optional[rs.align] = None
         self._color_frame: Optional[np.ndarray] = None
         self._depth_frame: Optional[np.ndarray] = None
+        self._depth_frame_rs: Optional[rs.depth_frame] = None
         self._intrinsics: Optional[rs.intrinsics] = None
         self._roi_frame = None
 
@@ -62,7 +63,7 @@ class CameraStream:
             height=self._height,
             fps=self._fps,
         )
-        self._intrinsics = get_camera_intrinsics(profile)
+        self._intrinsics = get_camera_intrinsics(profile, stream_type=rs.stream.color)
         self._align = rs.align(rs.stream.color)
 
         self._running = True
@@ -87,6 +88,7 @@ class CameraStream:
                     self._depth_roi = depth_roi
                     self._color_frame = color_full_roi
                     self._depth_frame = depth_img
+                    self._depth_frame_rs = depth_frame
                     self._roi_frame = display_roi
     def read(self) -> Optional[np.ndarray]:
         """Return the latest color frame (or None if not yet available)."""
@@ -97,6 +99,11 @@ class CameraStream:
         """Return the latest depth frame."""
         with self._lock:
             return self._depth_frame.copy() if self._depth_frame is not None else None
+
+    def read_depth_frame(self) -> Optional[rs.depth_frame]:
+        """Return the latest RealSense depth frame (SDK object)."""
+        with self._lock:
+            return self._depth_frame_rs
     
     def read_depth_roi(self) -> Optional[np.ndarray]:
         """Return the latest depth frame in ROI."""
@@ -120,6 +127,9 @@ class CameraStream:
     
     def get_align(self):
         return self._align
+    
+    def get_frames(self):
+        return self._color_frame,self._depth_frame
 
     def stop(self) -> None:
         """Stop the capture thread and release the camera resource."""

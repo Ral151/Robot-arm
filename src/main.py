@@ -124,6 +124,8 @@ def main(args: argparse.Namespace) -> None:
             roi_x1, roi_y1, _, _ = roi
             display_frame = frame.copy()
             display_roi = frame_roi.copy()
+            # Get the latest RealSense depth frame (SDK object)
+            depth_frame = camera.read_depth_frame()
 
             for det in detections_roi:
                 x1, y1, x2, y2 = det.bbox
@@ -180,8 +182,6 @@ def main(args: argparse.Namespace) -> None:
             
             # Convert pixel coordinates to robot coordinates using real frame coordinates
             target_centroid = target.centroid(roi)
-            # Get aligned frames
-            color_frame, depth_frame = get_aligned_frames(pipeline,align)
             # Convert center target_centroid to 3D realsense coordinates using depth information before do the transformation to robot coordinates
             px = int(round(target_centroid[0]))
             py = int(round(target_centroid[1]))
