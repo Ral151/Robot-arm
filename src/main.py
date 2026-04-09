@@ -159,10 +159,21 @@ def main(args: argparse.Namespace) -> None:
                 break
 
             target = selector.select(detections_roi)
-
             if target is None:
                 # No valid target found, continue to next frame
                 continue
+
+            target_x1 = target.bbox[0] + roi_x1
+            target_y1 = target.bbox[1] + roi_y1 
+            targert_x2 = target.bbox[2] + roi_x1
+            target_y2 = target.bbox[3] + roi_y1
+
+            bbox_x_length= targert_x2 - target_x1
+            bbox_y_length= target_y2 - target_y1
+            rotate_gripper = False
+
+            if bbox_y_length > bbox_x_length:
+                rotate_gripper = True
 
             cycle_count += 1
             logger.info(f"[Cycle {cycle_count}] Detected: {target.label} (conf={target.confidence:.2f})")
@@ -200,10 +211,13 @@ def main(args: argparse.Namespace) -> None:
                 # Execute pick and place
                 try:
                     # Compute object orientation from bounding box in full-frame coordinates
-                    bbox_angle_deg = target.get_bbox_angle()
-                    arm_theta = robot.get_gripper_orientation()
-                    robot_coords["r"] = bbox_angle_deg - arm_theta if arm_theta is not None else 0.0
-                    robot.pick(robot_coords)
+                    # bbox_angle_deg = target.get_bbox_angle()
+                    # arm_theta = robot.get_gripper_orientation()
+                    # robot_coords["r"] = bbox_angle_deg - arm_theta if arm_theta is not None else 0.0
+                    if rotate_gripper == True:
+                        robot.pick_grip_rotate(robot_coords)
+                    else:
+                        robot.pick(robot_coords)
                     time.sleep(1)
                     robot.place(target_bin)
                     

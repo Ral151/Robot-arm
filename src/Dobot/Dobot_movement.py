@@ -84,6 +84,26 @@ class DobotController:
         # Lift
         self.move_to(x, y, 50, r,wait=True)
         logger.info(f"Picked object at ({x:.1f}, {y:.1f}, {z:.1f})")
+    
+    def pick_grip_rotate(self, coords: Dict[str, float]) -> None:
+        import time
+        x, y, z = coords["x"], coords["y"], coords["z"]
+        r = 90
+        # Open gripper before approaching
+        self.set_gripper(False)
+        time.sleep(1)
+        # Move above target
+        self.move_to(x, y, 30, r, wait=True)
+        # Lower to target
+        z_down = float(-32.5)
+        self.move_to(x, y, z_down, r,wait=True)
+        # Close gripper to grab
+        self.set_gripper(True)
+        time.sleep(1.5)  # Wait for gripper to close securely
+        # Lift
+        self.move_to(x, y, 50, r,wait=True)
+        logger.info(f"Picked object at ({x:.1f}, {y:.1f}, {z:.1f})")
+
 
     def place(self, coords: Dict[str, float]) -> None:
         """Move to the drop position and open gripper to release."""
