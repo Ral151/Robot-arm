@@ -17,9 +17,11 @@ class TargetSelector:
     """
 
     def __init__(self, classes_config: dict) -> None:
-        self._priority_classes: List[str] = list(
-            classes_config.get("classes", {}).values()
-        )
+        priority = classes_config.get("priority", [])
+        if priority:
+            self._priority_classes = list(priority)
+        else:
+            self._priority_classes = list(classes_config.get("classes", {}).values())
 
     def select(self, detections: List[Detection]) -> Optional[Detection]:
         """Return the best target from a list of detections.

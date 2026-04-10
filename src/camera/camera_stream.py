@@ -63,7 +63,22 @@ class CameraStream:
             height=self._height,
             fps=self._fps,
         )
-        self._intrinsics = get_camera_intrinsics(profile, stream_type=rs.stream.color)
+        # Tune depth sensor IR settings for reflective targets (if supported).
+        try:
+            depth_sensor = profile.get_device().first_depth_sensor()
+            if depth_sensor.supports(rs.option.emitter_enabled):
+                depth_sensor.set_option(rs.option.emitter_enabled, 1)
+            if depth_sensor.supports(rs.option.laser_power):
+                depth_sensor.set_option(rs.option.laser_power, 360)
+            if depth_sensor.supports(rs.option.enable_auto_exposure):
+                depth_sensor.set_option(rs.option.enable_auto_exposure, 0)
+            if depth_sensor.supports(rs.option.exposure):
+                depth_sensor.set_option(rs.option.exposure, 8500)
+            if depth_sensor.supports(rs.option.gain):
+                depth_sensor.set_option(rs.option.gain, 16)
+        except Exception as exc:
+            print(f"Warning: failed to apply depth sensor settings: {exc}")
+        self._intrinsics = get_camera_intrinsics(profile, stream_type=rs.stream.depth)
         self._align = rs.align(rs.stream.color)
 
         self._running = True

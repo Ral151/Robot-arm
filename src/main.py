@@ -174,7 +174,7 @@ def main(args: argparse.Namespace) -> None:
             bbox_y_length= target_y2 - target_y1
             rotate_gripper = False
 
-            if bbox_y_length > bbox_x_length:
+            if bbox_x_length > bbox_y_length:
                 rotate_gripper = True
 
             cycle_count += 1
