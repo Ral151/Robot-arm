@@ -167,14 +167,14 @@ def main(args: argparse.Namespace) -> None:
 
             target_x1 = target.bbox[0] + roi_x1
             target_y1 = target.bbox[1] + roi_y1 
-            targert_x2 = target.bbox[2] + roi_x1
+            target_x2 = target.bbox[2] + roi_x1
             target_y2 = target.bbox[3] + roi_y1
 
-            bbox_x_length= targert_x2 - target_x1
-            bbox_y_length= target_y2 - target_y1
+            bbox_x_length= abs(target_x2 - target_x1)
+            bbox_y_length= abs(target_y2 - target_y1)
             rotate_gripper = False
 
-            if bbox_y_length > bbox_x_length:
+            if bbox_x_length > bbox_y_length:
                 rotate_gripper = True
 
             cycle_count += 1
@@ -218,6 +218,11 @@ def main(args: argparse.Namespace) -> None:
                         robot.pick_grip_rotate(robot_coords)
                     else:
                         robot.pick(robot_coords)
+                    '''Recalibrate base_T_cam'''
+                    # Get apriltag
+                    apriltag = get_apriltag_object(pipeline, align, intrinsics)
+                    # Get calibration matrix
+                    base_T_cam = calc_calibration(robot._device,apriltag)
                     time.sleep(1)
                     robot.place(target_bin)
                     
