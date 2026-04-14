@@ -5,6 +5,12 @@ classes:
   1: nut
   2: short_bolt
 
+# Target selection priority (highest first)
+priority:
+  - long_bolt
+  - short_bolt
+  - nut
+
 # Detection thresholds per class (optional overrides)
 thresholds:
   default: 0.5

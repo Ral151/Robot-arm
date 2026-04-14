@@ -1,5 +1,5 @@
 robot:
-  port: COM5
+  port: COM6
   baudrate: 115200
   home_position:
     x: 200.0
