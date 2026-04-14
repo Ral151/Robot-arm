@@ -9,7 +9,7 @@ Robot Arm Challenge Workflow:
 5. Sort nuts, bolts, and screws into designated bins.
 """
 
-import os
+import os,math
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 import argparse
@@ -202,6 +202,14 @@ def main(args: argparse.Namespace) -> None:
                 "y": float(P_dobot[1][0]),
                 "z": float(P_dobot[2][0]),
             }
+            '''
+            ====================================================
+            = Check if coordinates are valid for dobot to reach
+            ====================================================
+            '''
+            if(robot["x"]<0): continue
+            radius = math.sqrt(robot["x"]*robot["x"] + robot["y"]*robot["y"])
+            if(radius<170 or radius>320): continue
 
             # Determine target bin based on object class
             target_label = target.label.lower()
