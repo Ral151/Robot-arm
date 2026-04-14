@@ -76,7 +76,7 @@ class DobotController:
         # Move above target
         self.move_to(x, y, 30, r, wait=True)
         # Lower to target
-        z_down = float(-32.5)
+        z_down = float(-31.5)
         self.move_to(x, y, z_down, r,wait=True)
         # Close gripper to grab
         self.set_gripper(True)
@@ -95,7 +95,7 @@ class DobotController:
         # Move above target
         self.move_to(x, y, 30, r, wait=True)
         # Lower to target
-        z_down = float(-32.5)
+        z_down = float(-31.5)
         self.move_to(x, y, z_down, r,wait=True)
         # Close gripper to grab
         self.set_gripper(True)

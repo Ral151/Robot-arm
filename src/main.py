@@ -226,7 +226,6 @@ def main(args: argparse.Namespace) -> None:
                         robot.pick_grip_rotate(robot_coords)
                     else:
                         robot.pick(robot_coords)
-                    '''Recalibrate base_T_cam'''
                     # Get apriltag
                     apriltag = get_apriltag_object(pipeline, align, intrinsics)
                     # Get calibration matrix
