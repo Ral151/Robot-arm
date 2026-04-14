@@ -218,6 +218,10 @@ def main(args: argparse.Namespace) -> None:
                         robot.pick_grip_rotate(robot_coords)
                     else:
                         robot.pick(robot_coords)
+                    # Get apriltag
+                    apriltag = get_apriltag_object(pipeline, align, intrinsics)
+                    # Get calibration matrix
+                    base_T_cam = calc_calibration(robot._device,apriltag)
                     time.sleep(1)
                     robot.place(target_bin)
                     
