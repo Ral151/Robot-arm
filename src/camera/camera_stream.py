@@ -34,10 +34,19 @@ class CameraStream:
             # roi_cfg.get("y1", 217),
             # roi_cfg.get("x2", 545),
             # roi_cfg.get("y2", 423),
-            roi_cfg.get("x1", 318),
-            roi_cfg.get("y1", 241),
-            roi_cfg.get("x2", 546),
-            roi_cfg.get("y2", 424),
+
+            # Second ROI
+            # roi_cfg.get("x1", 318),
+            # roi_cfg.get("y1", 241),
+            # roi_cfg.get("x2", 500),
+            # roi_cfg.get("y2", 424),
+
+            # Third ROI
+            roi_cfg.get("x1", 210),
+            roi_cfg.get("y1", 197),
+            roi_cfg.get("x2", 370),
+            roi_cfg.get("y2", 367),
+            
         ]
 
         # RealSense pipeline

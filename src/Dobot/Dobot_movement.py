@@ -21,7 +21,7 @@ class DobotController:
         self._speed: int = robot_cfg.get("speed", 50)
         self._acceleration: int = robot_cfg.get("acceleration", 50)
         self._home: Dict[str, float] = robot_cfg.get(
-            "home_position", {"x": 200.0, "y": 0.0, "z": 50.0, "r": 0.0}
+            "home_position", {"x": 170.0, "y": 65.0, "z": 10.0, "r": 0.0}
         )
         self._gripper_close_delay: float = robot_cfg.get("gripper", {}).get("close_delay", 2)
         self._gripper_open_delay: float = robot_cfg.get("gripper", {}).get("open_delay", 0.3)
@@ -76,13 +76,13 @@ class DobotController:
         # Move above target
         self.move_to(x, y, 30, r, wait=True)
         # Lower to target
-        z_down = float(-31.5)
+        z_down = float(-30)
         self.move_to(x, y, z_down, r,wait=True)
         # Close gripper to grab
         self.set_gripper(True)
-        time.sleep(1.5)  # Wait for gripper to close securely
+        time.sleep(1)  # Wait for gripper to close securely
         # Lift
-        self.move_to(x, y, 50, r,wait=True)
+        self.move_to(x, y, 30, r,wait=True)
         logger.info(f"Picked object at ({x:.1f}, {y:.1f}, {z:.1f})")
     
     def pick_grip_rotate(self, coords: Dict[str, float]) -> None:
@@ -95,13 +95,13 @@ class DobotController:
         # Move above target
         self.move_to(x, y, 30, r, wait=True)
         # Lower to target
-        z_down = float(-31.5)
+        z_down = float(-30)
         self.move_to(x, y, z_down, r,wait=True)
         # Close gripper to grab
         self.set_gripper(True)
-        time.sleep(1.5)  # Wait for gripper to close securely
+        time.sleep(1)  # Wait for gripper to close securely
         # Lift
-        self.move_to(x, y, 50, r,wait=True)
+        self.move_to(x, y, 30, r,wait=True)
         logger.info(f"Picked object at ({x:.1f}, {y:.1f}, {z:.1f})")
 
 
@@ -111,11 +111,9 @@ class DobotController:
         x, y, z = coords["x"], coords["y"], coords["z"]
         r = coords.get("r", 0.0)
         self.move_to(x, y, 30, r, wait=True)
-        # self.move_to(x, y, z, r, wait=True)
         # Open gripper to release
         self.set_gripper(False)
-        time.sleep(1.5)
-        # self.move_to(x, y, z + 30, r, wait=True)
+        time.sleep(1)
         logger.info(f"Placed object at ({x:.1f}, {y:.1f}, {z:.1f})")
 
     def disconnect(self) -> None:

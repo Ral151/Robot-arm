@@ -8,8 +8,8 @@ from pydobotplus import Dobot
 from typing import Dict
 from calibration.apriltag_detection import get_apriltag_object
 from calibration.transforms import calc_calibration,update_calib_yaml,get_target_coords
-from Dobot.ports import check_port,get_dobot_port
-from Dobot.movement import move_dobot
+from utils.get_port import get_dobot_port
+from Dobot.clickNgo_movement import move_dobot
 
 from camera.rs_demo.realsense_utils import (
     initialize_pipeline,
@@ -216,7 +216,7 @@ class RealSense3DConverter:
                 # Show image
                 cv2.imshow(window_name, color_image)
                 
-                # self.clicked_point = None
+                self.clicked_point = None
                 
                 # Handle key press
                 key = cv2.waitKey(1) & 0xFF

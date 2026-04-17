@@ -11,10 +11,10 @@ def crop_every_image(img_path: str):
         if img.exists():
             filename = img.name
             img = cv2.imread(str(img))
-            x1 = 325
-            y1 = 201
-            x2 = 556
-            y2 = 413
+            x1 = 210
+            y1 = 197
+            x2 = 370
+            y2 = 367
 
             # Ensure coordinates are within image bounds
             h, w = img.shape[:2]
@@ -31,7 +31,7 @@ def crop_every_image(img_path: str):
     return 
 
 def main():
-    raw_img_path = Path("data/raw_images")
+    raw_img_path = Path("data/test_images")
     img_files = list(raw_img_path.glob("*.jpg"))
     crop_every_image(img_files)
 

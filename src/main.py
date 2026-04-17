@@ -202,14 +202,6 @@ def main(args: argparse.Namespace) -> None:
                 "y": float(P_dobot[1][0]),
                 "z": float(P_dobot[2][0]),
             }
-            '''
-            ====================================================
-            = Check if coordinates are valid for dobot to reach
-            ====================================================
-            '''
-            if(robot["x"]<0): continue
-            radius = math.sqrt(robot["x"]*robot["x"] + robot["y"]*robot["y"])
-            if(radius<170 or radius>320): continue
 
             # Determine target bin based on object class
             target_label = target.label.lower()
@@ -218,10 +210,6 @@ def main(args: argparse.Namespace) -> None:
                 
                 # Execute pick and place
                 try:
-                    # Compute object orientation from bounding box in full-frame coordinates
-                    # bbox_angle_deg = target.get_bbox_angle()
-                    # arm_theta = robot.get_gripper_orientation()
-                    # robot_coords["r"] = bbox_angle_deg - arm_theta if arm_theta is not None else 0.0
                     if rotate_gripper == True:
                         robot.pick_grip_rotate(robot_coords)
                     else:
@@ -230,7 +218,6 @@ def main(args: argparse.Namespace) -> None:
                     apriltag = get_apriltag_object(pipeline, align, intrinsics)
                     # Get calibration matrix
                     base_T_cam = calc_calibration(robot._device,apriltag)
-                    time.sleep(1)
                     robot.place(target_bin)
                     
                     # Update statistics
@@ -257,16 +244,6 @@ def main(args: argparse.Namespace) -> None:
         robot.home_to_position()  # Return to home_to_position before disconnecting
         robot.disconnect()
         
-        # Print final statistics
-        logger.info("="*50)
-        logger.info("=== FINAL RESULTS ===")
-        logger.info(f"Total items sorted: {stats['total']}")
-        # logger.info(f"  Nuts:   {stats['nut']}")
-        # logger.info(f"  Bolts:  {stats['long_bolt']}")
-        # logger.info(f"  Screws: {stats['short_bolt']}")
-        logger.info(f"Failed attempts: {stats['failed']}")
-        logger.info(f"Success rate: {(stats['total']/(stats['total']+stats['failed'])*100) if (stats['total']+stats['failed']) > 0 else 0:.1f}%")
-        logger.info("="*50)
         logger.info("Shutdown complete.")
 
 
@@ -276,5 +253,5 @@ if __name__ == "__main__":
     parser.add_argument("--camera-config", default="configs/camera.yaml")
     parser.add_argument("--calibration-config", default="configs/calibration.yaml")
     parser.add_argument("--classes-config", default="configs/classes.yaml")
-    parser.add_argument("--model", default="bestV2.pt")
+    parser.add_argument("--model", default="bestV3.pt") # Path to the YOLO Model Weights
     main(parser.parse_args())

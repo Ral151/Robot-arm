@@ -29,11 +29,15 @@ data/calibration_images/*
 models/yolo/*.pt
 model_datasets/*
 model_datasets2/*
+model_datasets3/*
 models/yolo/*.onnx
 !data/**/.gitkeep
 !models/**/.gitkeep
 runs/*
 models/*
+bestV3.pt
+bestV2.pt
+
 
 # Outputs
 outputs/logs/*

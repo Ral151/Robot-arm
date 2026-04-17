@@ -3,11 +3,11 @@ import os, yaml
 
 def initialize_pipeline(serial=None):
     """Initialize RealSense pipeline"""
-    config_path = os.path.join(os.path.dirname(__file__), '../config/device_port.yaml')
+    config_path = os.path.join(os.path.dirname(__file__), '../configs/camera.yaml')
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
     if serial is None:
-        serial = config.get('camera_serial')
+        serial = config.get("camera", {}).get("serial", 0)
     print(f"Using camera serial: {serial}")
 
     pipeline = rs.pipeline()

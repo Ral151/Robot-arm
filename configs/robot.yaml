@@ -2,10 +2,12 @@ robot:
   port: COM6
   baudrate: 115200
   home_position:
-    x: 200.0
-    y: 0.0
-    z: 50.0
+    x: 170.0
+    y: 65.0
+    z: 10.0
     r: 0.0
+
+  # Adjust the position using get_pose.py to find the optimal coordinates for placing.
   sorting_bins:
     nut:
       x: 196.0
@@ -22,18 +24,6 @@ robot:
       y: -223.0
       z: 31.0
       r: 0.0
-  pickup_zone:
-    x: 150.0
-    y: 0.0
-    z_safe: 80.0
-    z_bin: 10.0
-  workspace:
-    x_min: 100.0
-    x_max: 320.0
-    y_min: -150.0
-    y_max: 150.0
-    z_min: 0.0
-    z_max: 100.0
   speed: 80
   acceleration: 80
   gripper:
