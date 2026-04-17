@@ -50,7 +50,7 @@ def process_frames(pipeline, align):
 def main():
     """Test RealSense camera with live visualization and snapshot capability."""
     # Create output directory for snapshots
-    output_dir = Path("data/test_images")
+    output_dir = Path("data/raw_images")
     output_dir.mkdir(parents=True, exist_ok=True)
     
     print("="*60)
